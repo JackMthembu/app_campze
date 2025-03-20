@@ -1,0 +1,301 @@
+{% extends "organiser/base.html" %}
+
+{% block title %}Messages - Campze Organiser{% endblock %}
+
+{% block extra_css %}
+<style>
+    .messages-container {
+        height: calc(100vh - 200px);
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .contacts-list {
+        height: 100%;
+        border-right: 1px solid #eee;
+        overflow-y: auto;
+    }
+    .chat-area {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .messages-header {
+        padding: 20px;
+        border-bottom: 1px solid #eee;
+        background: white;
+    }
+    .messages-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background: #f8f9fa;
+    }
+    .message-input {
+        padding: 20px;
+        background: white;
+        border-top: 1px solid #eee;
+    }
+    .contact-item {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .contact-item:hover {
+        background-color: #f8f9fa;
+    }
+    .contact-item.active {
+        background-color: #e9ecef;
+    }
+    .message {
+        max-width: 75%;
+        margin-bottom: 20px;
+        clear: both;
+    }
+    .message-sent {
+        float: right;
+    }
+    .message-received {
+        float: left;
+    }
+    .message-content {
+        padding: 10px 15px;
+        border-radius: 15px;
+        position: relative;
+    }
+    .message-sent .message-content {
+        background: #007bff;
+        color: white;
+        border-bottom-right-radius: 5px;
+    }
+    .message-received .message-content {
+        background: white;
+        border-bottom-left-radius: 5px;
+    }
+    .message-time {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    .message-sent .message-time {
+        text-align: right;
+    }
+    .contact-search {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    .unread-badge {
+        background: #007bff;
+        color: white;
+        border-radius: 50%;
+        padding: 2px 6px;
+        font-size: 0.75rem;
+    }
+    .contact-status {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    .status-online { background-color: #2ecc71; }
+    .status-offline { background-color: #95a5a6; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3">Messages</h1>
+        <p class="text-muted">Communicate with parents and campers</p>
+    </div>
+</div>
+
+<div class="messages-container">
+    <div class="row g-0 h-100">
+        <!-- Contacts List -->
+        <div class="col-md-4 col-lg-3">
+            <div class="contacts-list">
+                <div class="contact-search">
+                    <input type="text" class="form-control" placeholder="Search contacts...">
+                </div>
+                
+                <!-- Filter by Camp -->
+                <div class="p-3 border-bottom">
+                    <select class="form-select form-select-sm" id="campFilter">
+                        <option value="">All Camps</option>
+                        {% for camp in camps %}
+                        <option value="{{ camp.id }}" {% if camp_id == camp.id %}selected{% endif %}>
+                            {{ camp.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Contacts -->
+                <div id="contactsList">
+                    {% for contact in contacts %}
+                    <div class="contact-item {% if loop.first %}active{% endif %}" 
+                         data-contact-id="{{ contact.id }}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="contact-status status-{{ contact.is_online and 'online' or 'offline' }}"></span>
+                                <h6 class="mb-1">{{ contact.name }}</h6>
+                                <small class="text-muted d-block">
+                                    {{ contact.role|title }} • {{ contact.camp_name }}
+                                </small>
+                            </div>
+                            {% if contact.unread_count > 0 %}
+                            <span class="unread-badge">{{ contact.unread_count }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> {{ contact.last_message_time.strftime('%H:%M') }}
+                            </small>
+                            <small class="text-truncate d-block">{{ contact.last_message }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="col-md-8 col-lg-9">
+            <div class="chat-area">
+                <!-- Chat Header -->
+                <div class="messages-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1" id="currentContactName">Select a contact</h5>
+                        <small class="text-muted" id="currentContactStatus"></small>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-light" type="button" id="chatOptionsDropdown" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="chatOptionsDropdown">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-search"></i> Search Messages</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-file"></i> View Files</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash"></i> Clear Chat</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="messages-body" id="messagesContainer">
+                    {% for message in messages %}
+                    <div class="message {{ message.sender_id == current_user.id and 'message-sent' or 'message-received' }}">
+                        <div class="message-content">
+                            {{ message.content }}
+                        </div>
+                        <div class="message-time">
+                            {{ message.created_at.strftime('%H:%M') }}
+                            {% if message.sender_id == current_user.id %}
+                            <i class="fas fa-check-double {% if message.is_read %}text-primary{% endif %}"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Message Input -->
+                <div class="message-input">
+                    <form id="messageForm" class="mb-0">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="messageInput" 
+                                   placeholder="Type your message...">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const contactsList = document.getElementById('contactsList');
+    const messagesContainer = document.getElementById('messagesContainer');
+    const messageForm = document.getElementById('messageForm');
+    const messageInput = document.getElementById('messageInput');
+    const campFilter = document.getElementById('campFilter');
+    let currentContactId = null;
+
+    // Handle contact selection
+    contactsList.addEventListener('click', function(e) {
+        const contactItem = e.target.closest('.contact-item');
+        if (!contactItem) return;
+
+        // Update active state
+        document.querySelectorAll('.contact-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        contactItem.classList.add('active');
+
+        // Update current contact
+        currentContactId = contactItem.dataset.contactId;
+        document.getElementById('currentContactName').textContent = 
+            contactItem.querySelector('h6').textContent;
+        document.getElementById('currentContactStatus').textContent = 
+            contactItem.querySelector('small').textContent;
+
+        // Load messages for this contact
+        loadMessages(currentContactId);
+
+        // Remove unread badge if exists
+        const unreadBadge = contactItem.querySelector('.unread-badge');
+        if (unreadBadge) unreadBadge.remove();
+    });
+
+    // Handle message submission
+    messageForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (!currentContactId || !messageInput.value.trim()) return;
+
+        sendMessage(currentContactId, messageInput.value.trim());
+        messageInput.value = '';
+    });
+
+    // Handle camp filter
+    campFilter.addEventListener('change', function() {
+        window.location.href = `{{ url_for('organiser.messages') }}?camp_id=${this.value}`;
+    });
+
+    function loadMessages(contactId) {
+        // Here you would typically load messages via AJAX
+        // For now, we'll just scroll to bottom
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function sendMessage(contactId, content) {
+        // Here you would typically send the message via AJAX
+        // For now, we'll just append it to the messages container
+        const messageHtml = `
+            <div class="message message-sent">
+                <div class="message-content">
+                    ${content}
+                </div>
+                <div class="message-time">
+                    ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                    <i class="fas fa-check"></i>
+                </div>
+            </div>
+        `;
+        messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Auto-scroll to bottom on load
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+});
+</script>
+{% endblock %} 

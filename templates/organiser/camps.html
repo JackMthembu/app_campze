@@ -1,0 +1,195 @@
+{% extends "organiser/base.html" %}
+
+{% block title %}Camps - Campze Organiser{% endblock %}
+
+{% block extra_css %}
+<style>
+    .camp-card {
+        transition: transform 0.2s;
+    }
+    .camp-card:hover {
+        transform: translateY(-5px);
+    }
+    .camp-image {
+        height: 200px;
+        object-fit: cover;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+    .camp-status {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    .filters {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h1 class="h3">Camps</h1>
+        <a href="{{ url_for('organiser.create_camp') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create New Camp
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filters mb-4">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="statusFilter">
+                <option value="">All</option>
+                <option value="active">Active</option>
+                <option value="upcoming">Upcoming</option>
+                <option value="completed">Completed</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Location</label>
+            <select class="form-select" id="locationFilter">
+                <option value="">All Locations</option>
+                {% for camp in camps %}
+                <option value="{{ camp.location }}">{{ camp.location }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Sort By</label>
+            <select class="form-select" id="sortBy">
+                <option value="date">Start Date</option>
+                <option value="name">Name</option>
+                <option value="registrations">Registrations</option>
+                <option value="revenue">Revenue</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Search</label>
+            <input type="text" class="form-control" id="searchInput" placeholder="Search camps...">
+        </div>
+    </div>
+</div>
+
+<!-- Camps Grid -->
+<div class="row g-4" id="campsGrid">
+    {% for camp in camps %}
+    <div class="col-md-6 col-lg-4 camp-item">
+        <div class="card camp-card h-100">
+            <img src="{{ url_for('static', filename='uploads/camps/' + camp.image) if camp.image else url_for('static', filename='img/default-camp.jpg') }}"
+                 class="camp-image" alt="{{ camp.name }}">
+            <div class="camp-status">
+                {% if camp.start_date > now %}
+                <span class="badge bg-info">Upcoming</span>
+                {% elif camp.end_date < now %}
+                <span class="badge bg-secondary">Completed</span>
+                {% else %}
+                <span class="badge bg-success">Active</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ camp.name }}</h5>
+                <p class="card-text text-muted">
+                    <i class="fas fa-map-marker-alt"></i> {{ camp.location }}
+                </p>
+                <p class="card-text">
+                    <i class="fas fa-calendar"></i> 
+                    {{ camp.start_date.strftime('%d %b') }} - {{ camp.end_date.strftime('%d %b %Y') }}
+                </p>
+                <div class="progress mb-3" style="height: 10px;">
+                    {% set percentage = (camp.registrations|length / camp.capacity * 100)|round|int %}
+                    <div class="progress-bar {% if percentage > 90 %}bg-danger{% elif percentage > 70 %}bg-warning{% else %}bg-success{% endif %}"
+                         role="progressbar" style="width: {{ percentage }}%"
+                         aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100">
+                    </div>
+                </div>
+                <p class="card-text small text-muted">
+                    {{ camp.registrations|length }}/{{ camp.capacity }} spots filled
+                </p>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="btn-group w-100">
+                    <a href="{{ url_for('organiser.camp_registrations', camp_id=camp.id) }}" 
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-clipboard-list"></i> Registrations
+                    </a>
+                    <a href="{{ url_for('organiser.edit_camp', camp_id=camp.id) }}" 
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            No camps found. Click the "Create New Camp" button to get started!
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusFilter = document.getElementById('statusFilter');
+    const locationFilter = document.getElementById('locationFilter');
+    const sortBy = document.getElementById('sortBy');
+    const searchInput = document.getElementById('searchInput');
+    const campsGrid = document.getElementById('campsGrid');
+
+    function filterCamps() {
+        const status = statusFilter.value;
+        const location = locationFilter.value;
+        const search = searchInput.value.toLowerCase();
+        const campItems = document.querySelectorAll('.camp-item');
+
+        campItems.forEach(item => {
+            const campStatus = item.querySelector('.badge').textContent.toLowerCase();
+            const campLocation = item.querySelector('.fa-map-marker-alt').nextSibling.textContent.trim();
+            const campName = item.querySelector('.card-title').textContent.toLowerCase();
+
+            const statusMatch = !status || campStatus === status;
+            const locationMatch = !location || campLocation === location;
+            const searchMatch = !search || campName.includes(search);
+
+            item.style.display = statusMatch && locationMatch && searchMatch ? '' : 'none';
+        });
+    }
+
+    function sortCamps() {
+        const items = Array.from(document.querySelectorAll('.camp-item'));
+        const sortValue = sortBy.value;
+
+        items.sort((a, b) => {
+            switch(sortValue) {
+                case 'name':
+                    return a.querySelector('.card-title').textContent
+                        .localeCompare(b.querySelector('.card-title').textContent);
+                case 'registrations':
+                    return parseInt(b.querySelector('.progress-bar').style.width) -
+                           parseInt(a.querySelector('.progress-bar').style.width);
+                // Add more sorting options as needed
+                default:
+                    return 0;
+            }
+        });
+
+        items.forEach(item => campsGrid.appendChild(item));
+    }
+
+    statusFilter.addEventListener('change', filterCamps);
+    locationFilter.addEventListener('change', filterCamps);
+    searchInput.addEventListener('input', filterCamps);
+    sortBy.addEventListener('change', sortCamps);
+});
+</script>
+{% endblock %} 

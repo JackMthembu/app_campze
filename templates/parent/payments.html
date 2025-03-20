@@ -1,0 +1,279 @@
+{% extends "parent/base.html" %}
+
+{% block title %}Payments{% endblock %}
+
+{% block styles %}
+<style>
+    .payments-container {
+        padding: 2rem;
+    }
+    .payment-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .payment-history {
+        margin-top: 2rem;
+    }
+    .payment-item {
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: transform 0.2s ease;
+    }
+    .payment-item:hover {
+        transform: translateX(5px);
+        border-left: 4px solid #000DFF;
+    }
+    .payment-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.875rem;
+    }
+    .status-paid {
+        background: #e3fcef;
+        color: #0d6832;
+    }
+    .status-pending {
+        background: #fff8e6;
+        color: #b7791f;
+    }
+    .status-failed {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    .payment-method-select {
+        border: 2px solid #eee;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .payment-method-select:hover {
+        border-color: #000DFF;
+    }
+    .payment-method-select.selected {
+        border-color: #000DFF;
+        background-color: #f8f9ff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payments-container">
+    <h1 class="mb-4">Payments</h1>
+
+    <!-- Payment Summary -->
+    <div class="payment-card">
+        <div class="row">
+            <div class="col-md-4">
+                <h3>Outstanding Balance</h3>
+                <h2 class="text-danger">R{{ '{:,.2f}'.format(total_outstanding|default(0)) }}</h2>
+            </div>
+            <div class="col-md-4">
+                <h3>Paid This Month</h3>
+                <h2 class="text-success">R{{ '{:,.2f}'.format(total_paid_month|default(0)) }}</h2>
+            </div>
+            <div class="col-md-4">
+                <h3>Next Payment Due</h3>
+                <h2>{{ next_payment_date|default('No pending payments') }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Make Payment Section -->
+    <div class="payment-card">
+        <h2 class="mb-4">Make a Payment</h2>
+        
+        <form id="payment-form" action="{{ url_for('parent.process_payment') }}" method="POST">
+            <!-- Payment Method Selection -->
+            <div class="mb-4">
+                <h4>Select Payment Method</h4>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="payment-method-select" data-method="credit-card">
+                            <i class="fas fa-credit-card fa-2x mb-2"></i>
+                            <h5>Credit Card</h5>
+                            <p class="text-muted mb-0">Secure payment via Stripe</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="payment-method-select" data-method="bank-transfer">
+                            <i class="fas fa-university fa-2x mb-2"></i>
+                            <h5>Bank Transfer</h5>
+                            <p class="text-muted mb-0">Direct bank transfer</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="payment-method-select" data-method="instant-eft">
+                            <i class="fas fa-bolt fa-2x mb-2"></i>
+                            <h5>Instant EFT</h5>
+                            <p class="text-muted mb-0">Pay via your bank</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Details -->
+            <div id="payment-details" class="mb-4" style="display: none;">
+                <div id="credit-card-form">
+                    <!-- Stripe Elements Placeholder -->
+                    <div id="card-element" class="form-control mb-3"></div>
+                    <div id="card-errors" class="text-danger mb-3"></div>
+                </div>
+
+                <div id="bank-transfer-info" style="display: none;">
+                    <div class="alert alert-info">
+                        <h5>Bank Details:</h5>
+                        <p>Bank: First National Bank<br>
+                        Account Name: Campze<br>
+                        Account Number: XXXX-XXXX-XXXX<br>
+                        Branch Code: XXXXX<br>
+                        Reference: Your booking reference</p>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg">Proceed to Payment</button>
+        </form>
+    </div>
+
+    <!-- Payment History -->
+    <div class="payment-history">
+        <h2 class="mb-4">Payment History</h2>
+        
+        {% if bookings %}
+            {% for booking in bookings %}
+            <div class="payment-item">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <h5 class="mb-1">{{ booking.camp.name }}</h5>
+                        <p class="text-muted mb-0">Ref: {{ booking.reference_number }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <p class="mb-0">Amount: R{{ '{:,.2f}'.format(booking.total_amount) }}</p>
+                        <small class="text-muted">{{ booking.created_at.strftime('%d %B %Y') }}</small>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="payment-status status-{{ booking.status }}">
+                            {{ booking.status|title }}
+                        </span>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="viewPaymentDetails('{{ booking.reference_number }}')">
+                            View Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No payment history available.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Payment Details Modal -->
+<div class="modal fade" id="paymentDetailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Payment Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Payment details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    // Initialize Stripe
+    const stripe = Stripe('your_publishable_key');
+    const elements = stripe.elements();
+    const card = elements.create('card');
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const paymentMethods = document.querySelectorAll('.payment-method-select');
+        const paymentDetails = document.getElementById('payment-details');
+        const cardForm = document.getElementById('credit-card-form');
+        const bankInfo = document.getElementById('bank-transfer-info');
+
+        // Payment method selection
+        paymentMethods.forEach(method => {
+            method.addEventListener('click', function() {
+                // Remove selected class from all methods
+                paymentMethods.forEach(m => m.classList.remove('selected'));
+                // Add selected class to clicked method
+                this.classList.add('selected');
+                
+                const methodType = this.dataset.method;
+                paymentDetails.style.display = 'block';
+
+                // Show/hide appropriate payment form
+                if (methodType === 'credit-card') {
+                    cardForm.style.display = 'block';
+                    bankInfo.style.display = 'none';
+                    card.mount('#card-element');
+                } else if (methodType === 'bank-transfer') {
+                    cardForm.style.display = 'none';
+                    bankInfo.style.display = 'block';
+                }
+            });
+        });
+
+        // Handle form submission
+        const form = document.getElementById('payment-form');
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const selectedMethod = document.querySelector('.payment-method-select.selected');
+            
+            if (selectedMethod.dataset.method === 'credit-card') {
+                const {token, error} = await stripe.createToken(card);
+                if (error) {
+                    const errorElement = document.getElementById('card-errors');
+                    errorElement.textContent = error.message;
+                } else {
+                    // Handle the token
+                    handlePayment(token);
+                }
+            } else {
+                // Handle other payment methods
+                handlePayment(null);
+            }
+        });
+    });
+
+    function handlePayment(token) {
+        // Add your payment processing logic here
+        console.log('Processing payment:', token);
+    }
+
+    function viewPaymentDetails(reference) {
+        // Fetch and display payment details in modal
+        fetch(`/api/payment-details/${reference}`)
+            .then(response => response.json())
+            .then(data => {
+                const modal = new bootstrap.Modal(document.getElementById('paymentDetailsModal'));
+                document.querySelector('#paymentDetailsModal .modal-body').innerHTML = `
+                    <div class="payment-details">
+                        <p><strong>Reference:</strong> ${data.reference}</p>
+                        <p><strong>Amount:</strong> R${data.amount}</p>
+                        <p><strong>Date:</strong> ${data.date}</p>
+                        <p><strong>Status:</strong> ${data.status}</p>
+                    </div>
+                `;
+                modal.show();
+            });
+    }
+</script>
+{% endblock %}
+{% endblock %} 

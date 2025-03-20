@@ -1,0 +1,197 @@
+{% extends "parent/base.html" %}
+
+{% block title %}Dashboard - Campze Parent Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        transition: transform 0.3s;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    .camp-card {
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        transition: all 0.3s;
+    }
+    .camp-card:hover {
+        box-shadow: 0 5px 15px rgba(96, 208, 172, 0.1);
+        border-color: var(--primary);
+    }
+    .camp-status {
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+    }
+    .status-active {
+        background-color: var(--primary-lighter);
+        color: var(--primary-darker);
+    }
+    .status-upcoming {
+        background-color: #ffd8a8;
+        color: #d9480f;
+    }
+    .status-completed {
+        background-color: #e9ecef;
+        color: #495057;
+    }
+    .progress {
+        height: 8px;
+        border-radius: 4px;
+    }
+    .progress-bar {
+        background-color: var(--primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3">Welcome back, {{ current_user.name }}!</h1>
+            <p class="text-muted">Here's an overview of your children's camp activities</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Active Camps</h6>
+                            <h2 class="card-title mb-0">{{ upcoming_camps|length }}</h2>
+                        </div>
+                        <div class="rounded-circle p-3" style="background-color: var(--primary-lighter)">
+                            <i class="fas fa-campground fa-2x" style="color: var(--primary-darker)"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Registered Children</h6>
+                            <h2 class="card-title mb-0">{{ children|length }}</h2>
+                        </div>
+                        <div class="rounded-circle p-3" style="background-color: var(--primary-lighter)">
+                            <i class="fas fa-child fa-2x" style="color: var(--primary-darker)"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Upcoming Activities</h6>
+                            <h2 class="card-title mb-0">{{ upcoming_camps|selectattr('status', 'equalto', 'upcoming')|list|length }}</h2>
+                        </div>
+                        <div class="rounded-circle p-3" style="background-color: var(--primary-lighter)">
+                            <i class="fas fa-calendar-alt fa-2x" style="color: var(--primary-darker)"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Children and Camps Section -->
+    <div class="row">
+        <!-- Children List -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center" 
+                     style="background-color: white; border-bottom: 2px solid var(--primary-lighter)">
+                    <h5 class="mb-0">Your Children</h5>
+                    <a href="{{ url_for('parent.manage_children') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-plus"></i> Add Child
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if children %}
+                        {% for child in children %}
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="{{ child.profile_picture or url_for('static', filename='img/default-child.png') }}" 
+                                 alt="{{ child.name }}" 
+                                 class="rounded-circle me-3"
+                                 style="width: 40px; height: 40px; object-fit: cover;">
+                            <div>
+                                <h6 class="mb-0">{{ child.name }}</h6>
+                                <small class="text-muted">Age: {{ child.age }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center my-4">No children registered yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Camps -->
+        <div class="col-md-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center"
+                     style="background-color: white; border-bottom: 2px solid var(--primary-lighter)">
+                    <h5 class="mb-0">Upcoming Camps</h5>
+                    <a href="{{ url_for('parent.view_camps') }}" class="btn btn-sm btn-outline-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_camps %}
+                        {% for registration in upcoming_camps %}
+                        <div class="camp-card p-3 mb-3">
+                            <div class="row align-items-center">
+                                <div class="col-md-2">
+                                    <img src="{{ registration.camp.image or url_for('static', filename='img/default-camp.jpg') }}" 
+                                         alt="{{ registration.camp.name }}"
+                                         class="img-fluid rounded"
+                                         style="width: 80px; height: 80px; object-fit: cover;">
+                                </div>
+                                <div class="col-md-7">
+                                    <h6 class="mb-1">{{ registration.camp.name }}</h6>
+                                    <p class="mb-1 text-muted">
+                                        <i class="fas fa-map-marker-alt"></i> {{ registration.camp.location }}
+                                    </p>
+                                    <p class="mb-0 text-muted">
+                                        <i class="fas fa-calendar"></i> 
+                                        {{ registration.camp.start_date.strftime('%d %b') }} - 
+                                        {{ registration.camp.end_date.strftime('%d %b, %Y') }}
+                                    </p>
+                                </div>
+                                <div class="col-md-3 text-md-end">
+                                    <span class="camp-status status-{{ registration.camp.status }}">
+                                        {{ registration.camp.status|title }}
+                                    </span>
+                                    <div class="mt-2">
+                                        <small class="text-muted d-block">Registration Progress</small>
+                                        <div class="progress mt-1">
+                                            <div class="progress-bar" role="progressbar" 
+                                                 style="width: {{ (registration.camp.registered_count / registration.camp.capacity) * 100 }}%">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center my-4">No upcoming camps</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

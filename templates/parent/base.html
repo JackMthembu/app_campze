@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Campze Parent Portal{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #60d0ac;
+            --primary-light: #7ddbbe;
+            --primary-lighter: #9ae6cf;
+            --primary-dark: #4eb796;
+            --primary-darker: #3c9e80;
+            --text-on-primary: #ffffff;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: var(--text-on-primary);
+            padding-top: 20px;
+            transition: all 0.3s;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.9);
+            padding: 12px 20px;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            color: white;
+            background: var(--primary-dark);
+        }
+
+        .nav-link.active {
+            background: var(--primary-darker);
+            color: white;
+        }
+
+        .nav-link i {
+            width: 25px;
+        }
+
+        .profile-section {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .profile-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+            border: 3px solid var(--primary-lighter);
+        }
+
+        .header {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-radius: 10px;
+        }
+
+        .stats-card {
+            background: linear-gradient(45deg, var(--primary), var(--primary-light));
+            color: white;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff6b6b;
+            color: white;
+            border-radius: 50%;
+            padding: 3px 6px;
+            font-size: 0.7rem;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            .main-content {
+                margin-left: 70px;
+            }
+            .sidebar.expanded {
+                width: 250px;
+            }
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .sidebar-logo {
+            max-width: 80%;
+            height: auto;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .sidebar-logo:hover {
+            opacity: 1;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="profile-section">
+            <img src="{{ current_user.profile_picture or url_for('static', filename='img/default-profile.png') }}" 
+                 alt="Profile" class="profile-img">
+            <h6 class="mb-0 text-white">{{ current_user.name }}</h6>
+            <small class="text-light">Parent</small>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'parent.dashboard' %}active{% endif %}" 
+                   href="{{ url_for('parent.dashboard') }}">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'parent.manage_children' %}active{% endif %}" 
+                   href="{{ url_for('parent.manage_children') }}">
+                    <i class="fas fa-child"></i> Children
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'parent.view_camps' %}active{% endif %}" 
+                   href="{{ url_for('parent.view_camps') }}">
+                    <i class="fas fa-campground"></i> Camps
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'parent.payments' %}active{% endif %}" 
+                   href="{{ url_for('parent.payments') }}">
+                    <i class="fas fa-credit-card"></i> Payments
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'parent.statements' %}active{% endif %}" 
+                   href="{{ url_for('parent.statements') }}">
+                    <i class="fas fa-file-invoice"></i> Statements
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'parent.messages' %}active{% endif %}" 
+                   href="{{ url_for('parent.messages') }}">
+                    <i class="fas fa-envelope"></i> Messages
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <img src="{{ url_for('static', filename='img/images/logos/logo7.png') }}" 
+                 alt="Campze Logo" 
+                 class="sidebar-logo">
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content" id="main-content">
+        <header class="header">
+            <button class="btn btn-light" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="d-flex align-items-center">
+                <div class="position-relative me-4">
+                    <a href="#" class="btn btn-light position-relative">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">2</span>
+                    </a>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle" type="button" id="userDropdown" 
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="{{ current_user.profile_picture or url_for('static', filename='img/default-profile.png') }}" 
+                             alt="Profile" class="rounded-circle" style="width: 30px; height: 30px;">
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('parent.settings' )}}"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('auth_routes.logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <div class="container-fluid py-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('main-content').classList.toggle('expanded');
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

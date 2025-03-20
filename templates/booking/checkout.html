@@ -1,0 +1,121 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Campze - Checkout{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Booking Summary -->
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">Booking Summary</h2>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Camp Details</h5>
+                            <p class="mb-1"><strong>{{ booking.camp.name }}</strong></p>
+                            <p class="text-muted mb-0">{{ booking.camp.location }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Dates</h5>
+                            <p class="mb-1"><strong>Check-in:</strong> {{ booking.check_in_date.strftime('%B %d, %Y') }}</p>
+                            <p class="mb-0"><strong>Check-out:</strong> {{ booking.check_out_date.strftime('%B %d, %Y') }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Guests</h5>
+                            <p class="mb-1"><strong>Adults:</strong> {{ booking.num_adults }}</p>
+                            <p class="mb-0"><strong>Children:</strong> {{ booking.num_children }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Duration</h5>
+                            <p class="mb-0"><strong>{{ booking.nights }} night{% if booking.nights != 1 %}s{% endif %}</strong></p>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5>Price Breakdown</h5>
+                    <div class="table-responsive">
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td>Adults ({{ booking.num_adults }} × ${{ "%.2f"|format(booking.camp.price_per_adult) }} × {{ booking.nights }})</td>
+                                    <td class="text-end">${{ "%.2f"|format(booking.adult_total) }}</td>
+                                </tr>
+                                {% if booking.num_children > 0 %}
+                                <tr>
+                                    <td>Children ({{ booking.num_children }} × ${{ "%.2f"|format(booking.camp.price_per_child) }} × {{ booking.nights }})</td>
+                                    <td class="text-end">${{ "%.2f"|format(booking.child_total) }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Service Fee</td>
+                                    <td class="text-end">${{ "%.2f"|format(booking.service_fee) }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Tax ({{ "%.1f"|format(booking.tax_rate * 100) }}%)</td>
+                                    <td class="text-end">${{ "%.2f"|format(booking.tax_amount) }}</td>
+                                </tr>
+                                <tr class="fw-bold">
+                                    <td>Total</td>
+                                    <td class="text-end">${{ "%.2f"|format(booking.total_amount) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Section -->
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Payment</h3>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        You will not be charged until you confirm your payment on the next page.
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <form method="POST" action="{{ url_for('main.process_payment', booking_id=booking.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                Proceed to Payment
+                                <i class="fas fa-lock ms-2"></i>
+                            </button>
+                        </form>
+                        <a href="{{ url_for('main.booking_form') }}" class="btn btn-outline-secondary">
+                            Modify Booking
+                        </a>
+                    </div>
+
+                    <div class="mt-4">
+                        <h6>Secure Payment</h6>
+                        <p class="text-muted small mb-2">We accept the following payment methods:</p>
+                        <div class="payment-methods">
+                            <i class="fab fa-cc-visa fa-2x me-2"></i>
+                            <i class="fab fa-cc-mastercard fa-2x me-2"></i>
+                            <i class="fab fa-cc-amex fa-2x me-2"></i>
+                            <i class="fab fa-cc-discover fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    .payment-methods {
+        color: #6c757d;
+    }
+</style>
+{% endblock %} 

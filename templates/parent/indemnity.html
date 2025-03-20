@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}Indemnity Form - {{ child.user.name }}{% endblock %}
+
+{% block styles %}
+<style>
+    .indemnity-container {
+        padding: 2rem;
+    }
+    .form-section {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .form-section h3 {
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #eee;
+    }
+    .form-check {
+        margin-bottom: 1rem;
+    }
+    .form-check-label {
+        cursor: pointer;
+    }
+    .medical-alert {
+        background-color: #fee2e2;
+        border: 1px solid #ef4444;
+        color: #dc2626;
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    .save-indicator {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        background: #000DFF;
+        color: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: none;
+    }
+    .save-indicator.show {
+        display: block;
+        animation: fadeInOut 2s ease-in-out;
+    }
+    @keyframes fadeInOut {
+        0% { opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { opacity: 0; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="indemnity-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Indemnity Form - {{ child.user.name }}</h1>
+        <button class="btn btn-primary" onclick="printForm()">
+            <i class="fas fa-print me-2"></i>Print Form
+        </button>
+    </div>
+
+    <form id="indemnityForm">
+        <!-- Personal Information -->
+        <div class="form-section">
+            <h3>Personal Information</h3>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-control" value="{{ child.user.name }} {{ child.user.lastname }}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date" class="form-control" name="date_of_birth" 
+                           value="{{ child.user.date_of_birth|default('', true) }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Grade</label>
+                    <input type="text" class="form-control" name="grade" 
+                           value="{{ child.user.grade|default('', true) }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Gender</label>
+                    <select class="form-select" name="gender" required>
+                        <option value="">Select gender</option>
+                        <option value="male" {% if child.user.gender == 'male' %}selected{% endif %}>Male</option>
+                        <option value="female" {% if child.user.gender == 'female' %}selected{% endif %}>Female</option>
+                        <option value="other" {% if child.user.gender == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical Information -->
+        <div class="form-section">
+            <h3>Medical Information</h3>
+            
+            {% if child.user.diabetic or child.user.heart_condition or child.user.epilepsy %}
+            <div class="medical-alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Important medical conditions have been noted. Please ensure all information is up to date.
+            </div>
+            {% endif %}
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">Medical Aid Name</label>
+                    <input type="text" class="form-control" name="medical_aid_name" 
+                           value="{{ child.user.medical_aid_name|default('', true) }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Medical Aid Number</label>
+                    <input type="text" class="form-control" name="medical_aid_number" 
+                           value="{{ child.user.medical_aid_number|default('', true) }}">
+                </div>
+            </div>
+
+            <h4 class="mb-3">Medical Conditions</h4>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="diabetic" 
+                               {% if child.user.diabetic %}checked{% endif %}>
+                        <label class="form-check-label">Diabetic</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="heart_condition" 
+                               {% if child.user.heart_condition %}checked{% endif %}>
+                        <label class="form-check-label">Heart Condition</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="epilepsy" 
+                               {% if child.user.epilepsy %}checked{% endif %}>
+                        <label class="form-check-label">Epilepsy</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="asthmatic" 
+                               {% if child.user.asthmatic %}checked{% endif %}>
+                        <label class="form-check-label">Asthmatic</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="seizures" 
+                               {% if child.user.seizures %}checked{% endif %}>
+                        <label class="form-check-label">Seizures</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="wheelchair_support" 
+                               {% if child.user.wheelchair_support %}checked{% endif %}>
+                        <label class="form-check-label">Wheelchair Support</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <label class="form-label">Other Medical Conditions</label>
+                <textarea class="form-control" name="other_medical_conditions" rows="3">{{ child.user.other_medical_conditions|default('', true) }}</textarea>
+            </div>
+        </div>
+
+        <!-- Allergies -->
+        <div class="form-section">
+            <h3>Allergies</h3>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="nuts_allergy" 
+                               {% if child.user.nuts_allergy %}checked{% endif %}>
+                        <label class="form-check-label">Nuts</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="lactose_allergy" 
+                               {% if child.user.lactose_allergy %}checked{% endif %}>
+                        <label class="form-check-label">Lactose</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="eggs_allergy" 
+                               {% if child.user.eggs_allergy %}checked{% endif %}>
+                        <label class="form-check-label">Eggs</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="gluten_allergy" 
+                               {% if child.user.gluten_allergy %}checked{% endif %}>
+                        <label class="form-check-label">Gluten</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="sea_food_allergy" 
+                               {% if child.user.sea_food_allergy %}checked{% endif %}>
+                        <label class="form-check-label">Sea Food</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <label class="form-label">Other Allergies</label>
+                <textarea class="form-control" name="other_allergies" rows="3">{{ child.user.other_allergies|default('', true) }}</textarea>
+            </div>
+        </div>
+
+        <!-- Consents -->
+        <div class="form-section">
+            <h3>Consents</h3>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" name="photography_consent" 
+                       {% if child.user.photography_consent %}checked{% endif %}>
+                <label class="form-check-label">
+                    I give permission for photographs of my child to be used for camp purposes
+                </label>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" name="water_activities_consent" 
+                       {% if child.user.water_activities_consent %}checked{% endif %}>
+                <label class="form-check-label">
+                    I give permission for my child to participate in water activities
+                </label>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Swimming Level</label>
+                <select class="form-select" name="swimming_level">
+                    <option value="">Select swimming level</option>
+                    <option value="non_swimmer" {% if child.user.swimming_level == 'non_swimmer' %}selected{% endif %}>Non-swimmer</option>
+                    <option value="beginner" {% if child.user.swimming_level == 'beginner' %}selected{% endif %}>Beginner</option>
+                    <option value="intermediate" {% if child.user.swimming_level == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                    <option value="advanced" {% if child.user.swimming_level == 'advanced' %}selected{% endif %}>Advanced</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Declaration</h3>
+            <div class="alert alert-info">
+                <p>I hereby declare that:</p>
+                <ol>
+                    <li>All information provided above is accurate and complete.</li>
+                    <li>I understand that withholding any medical information may put my child at risk.</li>
+                    <li>I give permission for emergency medical treatment if needed.</li>
+                    <li>I understand and accept the camp's policies and procedures.</li>
+                </ol>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" required>
+                <label class="form-check-label">
+                    I have read and agree to the above declaration
+                </label>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="save-indicator" id="saveIndicator">
+    <i class="fas fa-check me-2"></i>Changes saved
+</div>
+
+{% block scripts %}
+<script>
+    let saveTimeout;
+    const form = document.getElementById('indemnityForm');
+    const saveIndicator = document.getElementById('saveIndicator');
+
+    // Auto-save form changes
+    form.addEventListener('change', function(e) {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveChanges, 500);
+    });
+
+    function saveChanges() {
+        const formData = new FormData(form);
+        const data = {};
+        formData.forEach((value, key) => {
+            if (value === 'on') {
+                data[key] = true;
+            } else if (value === '') {
+                data[key] = null;
+            } else {
+                data[key] = value;
+            }
+        });
+
+        // Add child_id to the data
+        data.child_id = {{ child.id }};
+
+        fetch('{{ url_for("parent.update_indemnity") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message === 'Updated successfully') {
+                showSaveIndicator();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to save changes. Please try again.');
+        });
+    }
+
+    function showSaveIndicator() {
+        saveIndicator.classList.add('show');
+        setTimeout(() => {
+            saveIndicator.classList.remove('show');
+        }, 2000);
+    }
+
+    function printForm() {
+        window.print();
+    }
+</script>
+{% endblock %}
+{% endblock %} 

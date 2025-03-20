@@ -1,0 +1,268 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Campze - Payment{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    .StripeElement {
+        background-color: white;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #ced4da;
+    }
+
+    .StripeElement--focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .StripeElement--invalid {
+        border-color: #dc3545;
+    }
+
+    .StripeElement--webkit-autofill {
+        background-color: #fefde5 !important;
+    }
+
+    #payment-form {
+        max-width: 100%;
+    }
+
+    .payment-info {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .secure-badge {
+        color: #198754;
+        background-color: #d1e7dd;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Complete Your Payment</h2>
+
+                    <div class="payment-info mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="secure-badge">
+                                <i class="fas fa-lock"></i>
+                                Secure Payment
+                            </span>
+                            <div class="payment-methods">
+                                <i class="fab fa-cc-visa fa-lg me-2"></i>
+                                <i class="fab fa-cc-mastercard fa-lg me-2"></i>
+                                <i class="fab fa-cc-amex fa-lg me-2"></i>
+                                <i class="fab fa-cc-discover fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Booking Total:</strong></p>
+                                <h4 class="text-primary">${{ "%.2f"|format(booking.total_amount) }}</h4>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <p class="mb-1"><small class="text-muted">Booking Reference:</small></p>
+                                <p class="mb-0"><strong>{{ booking.reference_number }}</strong></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form id="payment-form" class="needs-validation" novalidate>
+                        <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="mb-4">
+                            <label for="card-holder-name" class="form-label">Card Holder Name</label>
+                            <input id="card-holder-name" type="text" class="form-control" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="card-element" class="form-label">Credit or Debit Card</label>
+                            <div id="card-element" class="form-control"></div>
+                            <div id="card-errors" class="invalid-feedback d-block" role="alert"></div>
+                        </div>
+
+                        <div class="d-grid gap-3">
+                            <button id="submit-button" type="submit" class="btn btn-primary btn-lg">
+                                <span id="button-text">Pay ${{ "%.2f"|format(booking.total_amount) }}</span>
+                                <span id="spinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+                            </button>
+                            <a href="{{ url_for('main.checkout', booking_id=booking.id) }}" class="btn btn-outline-secondary">
+                                Back to Checkout
+                            </a>
+                        </div>
+                    </form>
+
+                    <div class="mt-4">
+                        <p class="text-muted small mb-0">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Your payment information is encrypted and secure. We never store your card details.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    // Initialize Stripe
+    const stripe = Stripe('{{ stripe_public_key }}');
+    const elements = stripe.elements();
+
+    // Create card element
+    const card = elements.create('card', {
+        style: {
+            base: {
+                fontSize: '16px',
+                color: '#495057',
+                fontFamily: '"Segoe UI", system-ui, sans-serif',
+                '::placeholder': {
+                    color: '#6c757d',
+                },
+            },
+        },
+    });
+
+    // Mount the card element
+    card.mount('#card-element');
+
+    // Handle real-time validation errors
+    card.addEventListener('change', function(event) {
+        const displayError = document.getElementById('card-errors');
+        if (event.error) {
+            displayError.textContent = event.error.message;
+        } else {
+            displayError.textContent = '';
+        }
+    });
+
+    // Handle form submission
+    const form = document.getElementById('payment-form');
+    const submitButton = document.getElementById('submit-button');
+    const spinner = document.getElementById('spinner');
+    const buttonText = document.getElementById('button-text');
+
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        // Disable the submit button to prevent double submission
+        submitButton.disabled = true;
+        spinner.classList.remove('d-none');
+        buttonText.textContent = 'Processing...';
+
+        try {
+            const { paymentMethod, error } = await stripe.createPaymentMethod({
+                type: 'card',
+                card: card,
+                billing_details: {
+                    name: document.getElementById('card-holder-name').value
+                }
+            });
+
+            if (error) {
+                handleError(error);
+                return;
+            }
+
+            // Send payment method ID to server
+            const response = await fetch('{{ url_for("main.process_payment", booking_id=booking.id) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    payment_method_id: paymentMethod.id,
+                    booking_id: '{{ booking.id }}'
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.requires_action) {
+                // Handle 3D Secure authentication if required
+                const { error: actionError } = await stripe.handleCardAction(result.payment_intent_client_secret);
+                
+                if (actionError) {
+                    handleError(actionError);
+                    return;
+                }
+
+                // Confirm the payment after 3D Secure authentication
+                await confirmPayment(result.payment_intent_id);
+            } else if (result.success) {
+                // Payment successful, redirect to success page
+                window.location.href = result.redirect_url;
+            } else {
+                handleError({ message: result.error });
+            }
+        } catch (error) {
+            handleError({ message: 'An unexpected error occurred. Please try again.' });
+        }
+    });
+
+    async function confirmPayment(paymentIntentId) {
+        try {
+            const response = await fetch('{{ url_for("main.confirm_payment") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    payment_intent_id: paymentIntentId,
+                    booking_id: '{{ booking.id }}'
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                window.location.href = result.redirect_url;
+            } else {
+                handleError({ message: result.error });
+            }
+        } catch (error) {
+            handleError({ message: 'An unexpected error occurred. Please try again.' });
+        }
+    }
+
+    function handleError(error) {
+        const errorElement = document.getElementById('card-errors');
+        errorElement.textContent = error.message;
+        submitButton.disabled = false;
+        spinner.classList.add('d-none');
+        buttonText.textContent = 'Pay ${{ "%.2f"|format(booking.total_amount) }}';
+    }
+</script>
+{% endblock %} 

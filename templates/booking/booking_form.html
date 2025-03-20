@@ -1,0 +1,148 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Campze - Book {{ selected_camp.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Camp Details -->
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <h3 class="card-title">{{ selected_camp.name }}</h3>
+                    <p class="text-muted">{{ selected_camp.location }}</p>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <h5>Description</h5>
+                        <p>{{ selected_camp.description }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5>Pricing</h5>
+                        <p class="mb-1">Adults: ${{ "%.2f"|format(selected_camp.price_per_adult) }} per night</p>
+                        <p class="mb-1">Children: ${{ "%.2f"|format(selected_camp.price_per_child) }} per night</p>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Maximum capacity: {{ selected_camp.capacity }} guests
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Form -->
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">Book Your Stay</h2>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="{{ url_for('booking_routes.quick_checkout', camp_id=selected_camp.id) }}" class="needs-validation" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="num_adults" class="form-label">Number of Adults</label>
+                                <input type="number" class="form-control" id="num_adults" name="num_adults" 
+                                       min="1" value="1" required>
+                                <div class="form-text">Age 13 and above</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="num_children" class="form-label">Number of Children</label>
+                                <input type="number" class="form-control" id="num_children" name="num_children" 
+                                       min="0" value="0">
+                                <div class="form-text">Age 12 and below</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="check_in_date" class="form-label">Check-in Date</label>
+                                <input type="date" class="form-control" id="check_in_date" name="check_in_date" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="check_out_date" class="form-label">Check-out Date</label>
+                                <input type="date" class="form-control" id="check_out_date" name="check_out_date" required>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                Proceed to Checkout
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                            <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set minimum date as today for check-in and check-out
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('check_in_date').min = today;
+    document.getElementById('check_out_date').min = today;
+    document.getElementById('check_in_date').value = today;
+
+    // Update check-out minimum date when check-in is selected
+    document.getElementById('check_in_date').addEventListener('change', function() {
+        document.getElementById('check_out_date').min = this.value;
+        if (document.getElementById('check_out_date').value < this.value) {
+            document.getElementById('check_out_date').value = this.value;
+        }
+    });
+
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+
+    // Calculate total guests and validate against capacity
+    const maxCapacity = {{ selected_camp.capacity }};
+    const validateCapacity = () => {
+        const adults = parseInt(document.getElementById('num_adults').value) || 0;
+        const children = parseInt(document.getElementById('num_children').value) || 0;
+        const total = adults + children;
+        
+        if (total > maxCapacity) {
+            alert(`Total number of guests cannot exceed ${maxCapacity}`);
+            return false;
+        }
+        return true;
+    };
+
+    document.getElementById('num_adults').addEventListener('change', validateCapacity);
+    document.getElementById('num_children').addEventListener('change', validateCapacity);
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,356 @@
+{% extends "parent/base.html" %}
+
+{% block title %}Statements{% endblock %}
+
+{% block styles %}
+<style>
+    .statements-container {
+        padding: 2rem;
+    }
+    .statement-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .statement-filters {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .statement-item {
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: transform 0.2s ease;
+    }
+    .statement-item:hover {
+        transform: translateX(5px);
+        border-left: 4px solid #000DFF;
+    }
+    .statement-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.875rem;
+    }
+    .status-paid {
+        background: #e3fcef;
+        color: #0d6832;
+    }
+    .status-pending {
+        background: #fff8e6;
+        color: #b7791f;
+    }
+    .status-overdue {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    .download-btn {
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.875rem;
+        background: #f3f4f6;
+        color: #374151;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .download-btn:hover {
+        background: #000DFF;
+        color: white;
+    }
+    .summary-box {
+        background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+    }
+    .summary-box h3 {
+        margin: 0;
+        font-size: 1.25rem;
+    }
+    .summary-box .amount {
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="statements-container">
+    <h1 class="mb-4">Statements</h1>
+
+    <!-- Financial Summary -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="summary-box">
+                <h3>Total Paid</h3>
+                <div class="amount">R{{ '{:,.2f}'.format(total_paid|default(0)) }}</div>
+                <small>All time</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="summary-box">
+                <h3>Outstanding</h3>
+                <div class="amount">R{{ '{:,.2f}'.format(total_outstanding|default(0)) }}</div>
+                <small>Current balance</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="summary-box">
+                <h3>Next Payment</h3>
+                <div class="amount">R{{ '{:,.2f}'.format(next_payment_amount|default(0)) }}</div>
+                <small>Due: {{ next_payment_date|default('No upcoming payments') }}</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statement Filters -->
+    <div class="statement-card">
+        <div class="statement-filters">
+            <div class="flex-grow-1">
+                <label class="form-label">Date Range</label>
+                <div class="input-group">
+                    <input type="date" class="form-control" id="start-date">
+                    <span class="input-group-text">to</span>
+                    <input type="date" class="form-control" id="end-date">
+                </div>
+            </div>
+            <div>
+                <label class="form-label">Status</label>
+                <select class="form-select" id="status-filter">
+                    <option value="">All</option>
+                    <option value="paid">Paid</option>
+                    <option value="pending">Pending</option>
+                    <option value="overdue">Overdue</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Child</label>
+                <select class="form-select" id="child-filter">
+                    <option value="">All Children</option>
+                    {% for child in children %}
+                    <option value="{{ child.id }}">{{ child.user.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="align-self-end">
+                <button class="btn btn-primary" onclick="applyFilters()">
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="mb-4">
+            <button class="btn btn-outline-primary" onclick="downloadSelected()">
+                <i class="fas fa-download me-2"></i>Download Selected
+            </button>
+            <button class="btn btn-outline-primary ms-2" onclick="emailSelected()">
+                <i class="fas fa-envelope me-2"></i>Email Selected
+            </button>
+        </div>
+
+        <!-- Statements List -->
+        {% if bookings %}
+            {% for booking in bookings %}
+            <div class="statement-item">
+                <div class="row align-items-center">
+                    <div class="col-md-1">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="{{ booking.id }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <h5 class="mb-1">{{ booking.camp.name }}</h5>
+                        <p class="text-muted mb-0">Ref: {{ booking.reference_number }}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <p class="mb-0">Amount: R{{ '{:,.2f}'.format(booking.total_amount) }}</p>
+                        <small class="text-muted">{{ booking.created_at.strftime('%d %B %Y') }}</small>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="statement-status status-{{ booking.status }}">
+                            {{ booking.status|title }}
+                        </span>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="download-btn me-2" onclick="downloadStatement('{{ booking.reference_number }}')">
+                            <i class="fas fa-download me-1"></i>Download
+                        </button>
+                        <button class="download-btn me-2" onclick="emailStatement('{{ booking.reference_number }}')">
+                            <i class="fas fa-envelope me-1"></i>Email
+                        </button>
+                        <button class="download-btn" onclick="viewStatement('{{ booking.reference_number }}')">
+                            <i class="fas fa-eye me-1"></i>View
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No statements available.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Statement View Modal -->
+<div class="modal fade" id="statementModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Statement Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Statement content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="downloadCurrentStatement()">Download</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    function applyFilters() {
+        const startDate = document.getElementById('start-date').value;
+        const endDate = document.getElementById('end-date').value;
+        const status = document.getElementById('status-filter').value;
+        const childId = document.getElementById('child-filter').value;
+
+        // Reload page with filter parameters
+        const params = new URLSearchParams({
+            start_date: startDate,
+            end_date: endDate,
+            status: status,
+            child_id: childId
+        });
+
+        window.location.href = `{{ url_for('parent.statements') }}?${params.toString()}`;
+    }
+
+    function downloadSelected() {
+        const selected = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+            .map(cb => cb.value);
+
+        if (selected.length === 0) {
+            alert('Please select at least one statement to download.');
+            return;
+        }
+
+        // Download selected statements
+        fetch('{{ url_for("parent.download_statements") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ statements: selected })
+        })
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'statements.zip';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        });
+    }
+
+    function emailSelected() {
+        const selected = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+            .map(cb => cb.value);
+
+        if (selected.length === 0) {
+            alert('Please select at least one statement to email.');
+            return;
+        }
+
+        // Email selected statements
+        fetch('{{ url_for("parent.email_statements") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ statements: selected })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Statements have been emailed successfully.');
+            } else {
+                alert('Failed to email statements. Please try again.');
+            }
+        });
+    }
+
+    function viewStatement(reference) {
+        fetch(`/api/statement/${reference}`)
+            .then(response => response.json())
+            .then(data => {
+                const modal = new bootstrap.Modal(document.getElementById('statementModal'));
+                document.querySelector('#statementModal .modal-body').innerHTML = `
+                    <div class="statement-preview">
+                        <h4>Camp: ${data.camp_name}</h4>
+                        <p><strong>Reference:</strong> ${data.reference}</p>
+                        <p><strong>Date:</strong> ${data.date}</p>
+                        <p><strong>Amount:</strong> R${data.amount}</p>
+                        <p><strong>Status:</strong> ${data.status}</p>
+                        
+                        <h5 class="mt-4">Breakdown</h5>
+                        <table class="table">
+                            <tr>
+                                <td>Camp Fee</td>
+                                <td>R${data.camp_fee}</td>
+                            </tr>
+                            <tr>
+                                <td>Activities</td>
+                                <td>R${data.activities_fee}</td>
+                            </tr>
+                            <tr>
+                                <td>Insurance</td>
+                                <td>R${data.insurance_fee}</td>
+                            </tr>
+                            <tr class="table-active">
+                                <td><strong>Total</strong></td>
+                                <td><strong>R${data.total}</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                `;
+                modal.show();
+            });
+    }
+
+    function downloadStatement(reference) {
+        window.location.href = `{{ url_for('parent.download_statements', reference='') }}${reference}`;
+    }
+
+    function emailStatement(reference) {
+        fetch('{{ url_for("parent.email_statements") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ reference: reference })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Statement has been emailed successfully.');
+            } else {
+                alert('Failed to email statement. Please try again.');
+            }
+        });
+    }
+</script>
+{% endblock %}
+{% endblock %} 

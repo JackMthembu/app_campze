@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Forbidden - Campze</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #60d0ac;
+            --primary-light: #7ddbbe;
+            --primary-lighter: #9ae6cf;
+            --primary-dark: #4eb796;
+            --primary-darker: #3c9e80;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .error-container {
+            text-align: center;
+            max-width: 600px;
+        }
+
+        .error-code {
+            font-size: 120px;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+            margin-bottom: 0;
+            position: relative;
+            text-shadow: 2px 2px 4px rgba(96, 208, 172, 0.2);
+        }
+
+        .error-code::after {
+            content: '403';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 122px;
+            color: rgba(96, 208, 172, 0.1);
+            z-index: -1;
+            animation: pulse 2s infinite;
+        }
+
+        .error-message {
+            font-size: 24px;
+            color: #495057;
+            margin: 20px 0;
+        }
+
+        .error-description {
+            color: #6c757d;
+            margin-bottom: 30px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            padding: 12px 30px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(96, 208, 172, 0.2);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary);
+            border-color: var(--primary);
+            padding: 12px 30px;
+            font-weight: 500;
+            margin-left: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(96, 208, 172, 0.2);
+        }
+
+        .camping-icon {
+            font-size: 80px;
+            color: var(--primary);
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.1;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.05);
+                opacity: 0.05;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.1;
+            }
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .helpful-links {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(96, 208, 172, 0.2);
+        }
+
+        .helpful-links h6 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .helpful-links a {
+            color: var(--primary);
+            text-decoration: none;
+            margin: 0 15px;
+            transition: all 0.3s;
+        }
+
+        .helpful-links a:hover {
+            color: var(--primary-dark);
+        }
+
+        .helpful-links i {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <i class="fas fa-ban camping-icon"></i>
+        <h1 class="error-code">403</h1>
+        <h2 class="error-message">Restricted Area!</h2>
+        <p class="error-description">
+            Looks like this campsite is off-limits. You'll need special permission to explore this area.
+        </p>
+        <div>
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">
+                <i class="fas fa-home me-2"></i>Back to Base Camp
+            </a>
+            <button onclick="history.back()" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Previous Trail
+            </button>
+        </div>
+
+        <div class="helpful-links">
+            <h6>Safe Trails</h6>
+            {% if current_user.is_authenticated %}
+                {% if current_user.role == 'parent' %}
+                    <a href="{{ url_for('parent.dashboard') }}"><i class="fas fa-compass"></i>Dashboard</a>
+                    <a href="{{ url_for('parent.view_camps') }}"><i class="fas fa-campground"></i>Browse Camps</a>
+                    <a href="{{ url_for('parent.manage_children') }}"><i class="fas fa-child"></i>My Children</a>
+                {% elif current_user.role == 'organiser' %}
+                    <a href="{{ url_for('organiser.dashboard') }}"><i class="fas fa-compass"></i>Dashboard</a>
+                    <a href="{{ url_for('organiser.camps') }}"><i class="fas fa-campground"></i>Manage Camps</a>
+                    <a href="{{ url_for('organiser.messages') }}"><i class="fas fa-envelope"></i>Messages</a>
+                {% endif %}
+            {% else %}
+                <a href="{{ url_for('auth_routes.login') }}"><i class="fas fa-sign-in-alt"></i>Login</a>
+                <a href="{{ url_for('auth_routes.signup') }}"><i class="fas fa-user-plus"></i>Register</a>
+                <a href="{{ url_for('main.dashboard') }}"><i class="fas fa-home"></i>Home</a>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html> 

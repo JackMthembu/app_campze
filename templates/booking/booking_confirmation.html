@@ -1,0 +1,78 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Campze - Booking Confirmation{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    
+                    <h2 class="card-title mb-4">Booking Confirmed!</h2>
+                    
+                    <div class="alert alert-success mb-4">
+                        Your booking reference number is: <strong>{{ booking.reference_number }}</strong>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Booking Details</h5>
+                            <div class="row">
+                                <div class="col-md-6 text-start">
+                                    <p><strong>Camp:</strong> {{ booking.camp.name }}</p>
+                                    <p><strong>Location:</strong> {{ booking.camp.location }}</p>
+                                    <p><strong>Check-in:</strong> {{ booking.check_in_date.strftime('%B %d, %Y') }}</p>
+                                    <p><strong>Check-out:</strong> {{ booking.check_out_date.strftime('%B %d, %Y') }}</p>
+                                </div>
+                                <div class="col-md-6 text-start">
+                                    <p><strong>Adults:</strong> {{ booking.num_adults }}</p>
+                                    <p><strong>Children:</strong> {{ booking.num_children }}</p>
+                                    <p><strong>Duration:</strong> {{ booking.nights }} night{% if booking.nights != 1 %}s{% endif %}</p>
+                                    <p><strong>Total Amount:</strong> ${{ "%.2f"|format(booking.total_amount) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">What's Next?</h5>
+                            <div class="text-start">
+                                <p>1. You will receive a confirmation email with your booking details.</p>
+                                <p>2. The camp will contact you with check-in instructions.</p>
+                                <p>3. You can view your booking details anytime in your account dashboard.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-3">
+                        <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                            Return to Dashboard
+                        </a>
+                        <a href="{{ url_for('booking_routes.create_booking') }}" class="btn btn-outline-primary">
+                            Make Another Booking
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    .card {
+        border: none;
+        border-radius: 15px;
+    }
+    .alert {
+        border-radius: 10px;
+    }
+</style>
+{% endblock %} 

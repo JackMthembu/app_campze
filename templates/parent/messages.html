@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Messages{% endblock %}
+
+{% block styles %}
+<style>
+    .messages-container {
+        padding: 2rem;
+        height: calc(100vh - 100px);
+    }
+    .chat-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        height: 100%;
+        display: flex;
+    }
+    .contacts-list {
+        width: 300px;
+        border-right: 1px solid #eee;
+        overflow-y: auto;
+    }
+    .contact-item {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .contact-item:hover {
+        background-color: #f8f9ff;
+    }
+    .contact-item.active {
+        background-color: #f0f2ff;
+        border-left: 4px solid #000DFF;
+    }
+    .chat-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    .chat-header {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+        background: #f8f9ff;
+    }
+    .messages-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+    }
+    .message {
+        max-width: 70%;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        border-radius: 10px;
+    }
+    .message.sent {
+        background-color: #000DFF;
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 0;
+    }
+    .message.received {
+        background-color: #f0f2ff;
+        border-bottom-left-radius: 0;
+    }
+    .message-time {
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+    .chat-input {
+        padding: 1rem;
+        border-top: 1px solid #eee;
+    }
+    .message-form {
+        display: flex;
+        gap: 1rem;
+    }
+    .message-input {
+        flex: 1;
+        border: 1px solid #eee;
+        border-radius: 20px;
+        padding: 0.5rem 1rem;
+        resize: none;
+    }
+    .online-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    .online {
+        background-color: #10b981;
+    }
+    .offline {
+        background-color: #6b7280;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="messages-container">
+    <div class="chat-container">
+        <!-- Contacts List -->
+        <div class="contacts-list">
+            <div class="p-3">
+                <h4>Messages</h4>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" placeholder="Search contacts...">
+                    <button class="btn btn-outline-primary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contact Items -->
+            <div class="contact-item active">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="mb-1">Summer Camp 2025</h5>
+                        <p class="mb-0 text-muted">Camp Organizer</p>
+                    </div>
+                    <span class="badge bg-primary rounded-pill">2</span>
+                </div>
+                <small class="text-muted">Last message: 5 mins ago</small>
+            </div>
+
+            {% for child in children %}
+            <div class="contact-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="mb-1">{{ child.user.name }}'s Teacher</h5>
+                        <p class="mb-0 text-muted">{{ child.camp.name }}</p>
+                    </div>
+                </div>
+                <small class="text-muted">Last active: 2 hours ago</small>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area">
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0">Summer Camp 2025</h4>
+                        <div>
+                            <span class="online-indicator online"></span>
+                            <small>Camp Organizer is online</small>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-phone"></i>
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm ms-2">
+                            <i class="fas fa-video"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages List -->
+            <div class="messages-list" id="messages-list">
+                <div class="message received">
+                    <div class="message-content">
+                        Hello! How can I help you today?
+                    </div>
+                    <div class="message-time text-muted">
+                        10:30 AM
+                    </div>
+                </div>
+
+                <div class="message sent">
+                    <div class="message-content">
+                        Hi! I have a question about the upcoming camp activities.
+                    </div>
+                    <div class="message-time text-muted">
+                        10:31 AM
+                    </div>
+                </div>
+
+                <div class="message received">
+                    <div class="message-content">
+                        Of course! I'd be happy to help. What would you like to know?
+                    </div>
+                    <div class="message-time text-muted">
+                        10:32 AM
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Input -->
+            <div class="chat-input">
+                <form class="message-form" id="message-form">
+                    <textarea class="message-input" placeholder="Type your message..." rows="1"></textarea>
+                    <button type="button" class="btn btn-primary rounded-circle">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const socket = io();
+        const messagesList = document.getElementById('messages-list');
+        const messageForm = document.getElementById('message-form');
+        const messageInput = messageForm.querySelector('.message-input');
+
+        // Auto-scroll to bottom of messages
+        function scrollToBottom() {
+            messagesList.scrollTop = messagesList.scrollHeight;
+        }
+
+        // Add new message to chat
+        function addMessage(message, isSent = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
+            
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${message}</div>
+                <div class="message-time text-muted">${time}</div>
+            `;
+            
+            messagesList.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        // Handle form submission
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+            
+            if (message) {
+                // Emit message to server
+                socket.emit('send_message', {
+                    message: message,
+                    room: 'current_chat_room'
+                });
+
+                // Add message to chat
+                addMessage(message, true);
+                
+                // Clear input
+                messageInput.value = '';
+            }
+        });
+
+        // Handle received messages
+        socket.on('receive_message', function(data) {
+            addMessage(data.message, false);
+        });
+
+        // Auto-expand textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        // Initial scroll to bottom
+        scrollToBottom();
+    });
+</script>
+{% endblock %}
+{% endblock %} 

@@ -1,0 +1,207 @@
+{% extends "parent/base.html" %}
+
+{% block title %}Add Child - Campze Parent Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .child-form-card {
+        max-width: 800px;
+        margin: 2rem auto;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(96, 208, 172, 0.1);
+    }
+    .child-form-header {
+        background: linear-gradient(45deg, var(--primary), var(--primary-light));
+        color: white;
+        padding: 2rem;
+        border-radius: 15px 15px 0 0;
+        text-align: center;
+    }
+    .child-form-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    .child-form-body {
+        padding: 2rem;
+    }
+    .form-floating {
+        margin-bottom: 1rem;
+    }
+    .required-field::after {
+        content: "*";
+        color: red;
+        margin-left: 4px;
+    }
+    .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 1rem 0;
+    }
+
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .divider span {
+        padding: 0 1rem;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .pac-container {
+        z-index: 1051 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card child-form-card">
+        <div class="child-form-header">
+            <i class="fas fa-child child-form-icon"></i>
+            <h2>Add a Child</h2>
+            <p class="mb-0">Create your child's profile for camp registration</p>
+        </div>
+        <div class="child-form-body">
+            <form id="addChildForm" method="POST">
+                <div class="row">
+                    <!-- Personal Information -->
+                    <div class="col-md-6">
+                        <h4 class="mb-3">Personal Information</h4>
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="name" name="name" required>
+                            <label for="name" class="required-field">First Name</label>
+                        </div>
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="lastname" name="lastname" required>
+                            <label for="lastname" class="required-field">Last Name</label>
+                        </div>
+                        <div class="form-floating">
+                            <input type="email" class="form-control" id="email" name="email" required>
+                            <label for="email" class="required-field">Email</label>
+                        </div>
+                        <div class="form-floating">
+                            <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" required>
+                            <label for="date_of_birth" class="required-field">Date of Birth</label>
+                        </div>
+                        <div class="form-floating">
+                            <select class="form-select" id="gender" name="gender" required>
+                                <option value="">Select gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <label for="gender" class="required-field">Gender</label>
+                        </div>
+                    </div>
+
+                    <!-- School & Additional Information -->
+                    <div class="col-md-6">
+                        <h4 class="mb-3">School Information</h4>
+                        <div class="form-floating mb-3">
+                            <select class="form-select" id="school_id" name="school_id">
+                                <option value="">Select existing school</option>
+                                {% for school in schools %}
+                                <option value="{{ school.id }}">{{ school.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <label for="school_id">Existing School</label>
+                        </div>
+
+                        <div class="text-center mb-3">
+                            <div class="divider">
+                                <span>OR</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#addSchoolModal">
+                                <i class="fas fa-plus me-2"></i>Add New School
+                            </button>
+                        </div>
+
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="grade" name="grade">
+                            <label for="grade">Grade</label>
+                        </div>
+
+                        <div class="alert alert-info mt-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            After creating your child's profile, you'll be able to:
+                            <ul class="mb-0 mt-2">
+                                <li>Register them for camps</li>
+                                <li>Manage their activities</li>
+                                <li>Update medical information</li>
+                                <li>Set dietary preferences</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus me-2"></i>Add Child
+                    </button>
+                    <a href="{{ url_for('parent.manage_children') }}" class="btn btn-outline-secondary btn-lg ms-2">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add School Modal -->
+<div class="modal fade" id="addSchoolModal" tabindex="-1" aria-labelledby="addSchoolModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSchoolModalLabel">Add New School</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addSchoolForm">
+                    <div class="mb-3">
+                        <label for="schoolSearch" class="form-label">Search School</label>
+                        <input type="text" class="form-control" id="schoolSearch" placeholder="Start typing to search...">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="schoolName" class="form-label required-field">School Name</label>
+                        <input type="text" class="form-control" id="schoolName" name="name" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="schoolAddress" class="form-label required-field">Address</label>
+                        <input type="text" class="form-control" id="schoolAddress" name="address" required readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="schoolCity" class="form-label required-field">City</label>
+                        <input type="text" class="form-control" id="schoolCity" name="city" required readonly>
+                    </div>
+
+                    <!-- Hidden fields for Google Places data -->
+                    <input type="hidden" id="schoolLatitude" name="latitude">
+                    <input type="hidden" id="schoolLongitude" name="longitude">
+                    <input type="hidden" id="schoolStateId" name="state_id">
+                    <input type="hidden" id="schoolCountryId" name="country_id">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitSchool()">Add School</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_api_key }}&libraries=places"></script>
+<script src="{{ url_for('static', filename='js/google.js') }}"></script>
+{% endblock %} 

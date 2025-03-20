@@ -1,0 +1,154 @@
+{% extends "organiser/base.html" %}
+
+{% block title %}Dashboard - Campze Organiser{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-4">Dashboard</h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card stats-card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Total Camps</h5>
+                <h2 class="display-4 mb-0">{{ camps|length }}</h2>
+                <p class="small mb-0">Active camps under your management</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Total Registrations</h5>
+                <h2 class="display-4 mb-0">{{ total_registrations }}</h2>
+                <p class="small mb-0">Across all your camps</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Total Revenue</h5>
+                <h2 class="display-4 mb-0">R{{ "%.2f"|format(total_revenue) }}</h2>
+                <p class="small mb-0">From all registrations</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Camps -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Active Camps</h5>
+                <a href="{{ url_for('organiser.create_camp') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i> New Camp
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Camp Name</th>
+                                <th>Location</th>
+                                <th>Dates</th>
+                                <th>Registrations</th>
+                                <th>Available Spots</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for camp in camps %}
+                            <tr>
+                                <td>{{ camp.name }}</td>
+                                <td>{{ camp.location }}</td>
+                                <td>{{ camp.start_date.strftime('%d %b') }} - {{ camp.end_date.strftime('%d %b %Y') }}</td>
+                                <td>{{ camp.registrations|length }}/{{ camp.capacity }}</td>
+                                <td>{{ camp.capacity - camp.registrations|length }}</td>
+                                <td>
+                                    <a href="{{ url_for('organiser.camp_registrations', camp_id=camp.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-clipboard-list"></i>
+                                    </a>
+                                    <a href="{{ url_for('organiser.edit_camp', camp_id=camp.id) }}" 
+                                       class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">No active camps found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Registrations -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Registrations</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Camp</th>
+                                <th>Child Name</th>
+                                <th>Parent</th>
+                                <th>Registration Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for registration in recent_registrations %}
+                            <tr>
+                                <td>{{ registration.camp.name }}</td>
+                                <td>{{ registration.child.name }}</td>
+                                <td>{{ registration.parent.name }}</td>
+                                <td>{{ registration.created_at.strftime('%d %b %Y') }}</td>
+                                <td>
+                                    <span class="badge bg-{{ registration.status|lower == 'confirmed' and 'success' or 'warning' }}">
+                                        {{ registration.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No recent registrations</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add any dashboard-specific JavaScript here
+    document.addEventListener('DOMContentLoaded', function() {
+        // Example: Refresh dashboard data every 5 minutes
+        setInterval(function() {
+            location.reload();
+        }, 300000);
+    });
+</script>
+{% endblock %} 

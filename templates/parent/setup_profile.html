@@ -1,0 +1,83 @@
+{% extends "parent/base.html" %}
+
+{% block title %}Setup Guardian Profile - Campze Parent Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .setup-card {
+        max-width: 600px;
+        margin: 2rem auto;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(96, 208, 172, 0.1);
+    }
+    .setup-header {
+        background: linear-gradient(45deg, var(--primary), var(--primary-light));
+        color: white;
+        padding: 2rem;
+        border-radius: 15px 15px 0 0;
+        text-align: center;
+    }
+    .setup-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    .setup-body {
+        padding: 2rem;
+    }
+    .terms-text {
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card setup-card">
+        <div class="setup-header">
+            <i class="fas fa-user-shield setup-icon"></i>
+            <h2>Welcome to Campze</h2>
+            <p class="mb-0">Let's set up your guardian profile</p>
+        </div>
+        <div class="setup-body">
+            <form method="POST">
+                {{ form.csrf_token }}
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    By creating a guardian profile, you'll be able to:
+                    <ul class="mb-0 mt-2">
+                        <li>Add and manage your children's profiles</li>
+                        <li>Register for camps</li>
+                        <li>Track activities and payments</li>
+                        <li>Communicate with camp organizers</li>
+                    </ul>
+                </div>
+
+                <div class="form-check mt-4">
+                    {{ form.terms_accepted(class="form-check-input") }}
+                    {{ form.terms_accepted.label(class="form-check-label") }}
+                    {% if form.terms_accepted.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.terms_accepted.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="terms-text">
+                    By accepting the terms and conditions, you agree to our 
+                    <a href="#" target="_blank">Privacy Policy</a> and 
+                    <a href="#" target="_blank">Terms of Service</a>.
+                </div>
+
+                <div class="text-center mt-4">
+                    {{ form.submit(class="btn btn-primary btn-lg") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

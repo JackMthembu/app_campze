@@ -1,0 +1,245 @@
+{% extends "parent/base.html" %}
+
+{% block title %}Camp Registrations - Campze Parent Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .camp-card {
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        transition: all 0.3s;
+        overflow: hidden;
+        height: 100%;
+    }
+    .camp-card:hover {
+        box-shadow: 0 5px 15px rgba(96, 208, 172, 0.1);
+        border-color: var(--primary);
+    }
+    .camp-header {
+        background: linear-gradient(45deg, var(--primary), var(--primary-light));
+        color: white;
+        padding: 1.5rem;
+    }
+    .camp-body {
+        padding: 1.5rem;
+    }
+    .camp-info {
+        margin-bottom: 0.5rem;
+    }
+    .camp-info i {
+        color: var(--primary);
+        width: 20px;
+    }
+    .status-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .status-upcoming {
+        background-color: var(--primary-lighter);
+        color: var(--primary-darker);
+    }
+    .status-active {
+        background-color: #28a745;
+        color: white;
+    }
+    .status-completed {
+        background-color: #6c757d;
+        color: white;
+    }
+    .child-selector {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+    }
+    .child-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+        object-fit: cover;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        margin: 2rem 0;
+    }
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--primary);
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3">Camp Registrations</h1>
+                    <p class="text-muted">View and manage your children's camp registrations</p>
+                </div>
+                <a href="{{ url_for('parent.view_camps') }}" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i>Browse Camps
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Child Selector -->
+    <div class="child-selector">
+        <div class="d-flex align-items-center flex-wrap gap-3">
+            <span class="text-muted me-2">Filter by child:</span>
+            {% for child in children %}
+            <button class="btn btn-outline-primary child-filter" data-child-id="{{ child.id }}">
+                <img src="{{ child.profile_picture or url_for('static', filename='img/default-child.png') }}" 
+                     alt="{{ child.name }}" 
+                     class="child-avatar">
+                {{ child.name }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if not children %}
+    <div class="empty-state">
+        <i class="fas fa-child"></i>
+        <h3>No Children Added Yet</h3>
+        <p class="text-muted">Add your children to start registering them for camps</p>
+        <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addChildModal">
+            <i class="fas fa-plus me-2"></i>Add Child
+        </button>
+    </div>
+    {% else %}
+        {% for child in children %}
+        <div class="child-camps" id="child-{{ child.id }}">
+            <h4 class="mb-4">
+                <img src="{{ child.profile_picture or url_for('static', filename='img/default-child.png') }}" 
+                     alt="{{ child.name }}" 
+                     class="child-avatar">
+                {{ child.name }}'s Camps
+            </h4>
+
+            {% set registrations = child_camps[child.id] %}
+            {% if not registrations %}
+            <div class="empty-state">
+                <i class="fas fa-campground"></i>
+                <h3>No Camp Registrations</h3>
+                <p class="text-muted">{{ child.name }} isn't registered for any camps yet</p>
+                <a href="{{ url_for('parent.view_camps') }}" class="btn btn-primary mt-3">
+                    <i class="fas fa-search me-2"></i>Browse Available Camps
+                </a>
+            </div>
+            {% else %}
+            <div class="row g-4">
+                {% for registration in registrations %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="camp-card">
+                        <div class="camp-header">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="mb-1">{{ registration.camp.name }}</h5>
+                                {% if registration.camp.start_date > now %}
+                                <span class="status-badge status-upcoming">Upcoming</span>
+                                {% elif registration.camp.end_date < now %}
+                                <span class="status-badge status-completed">Completed</span>
+                                {% else %}
+                                <span class="status-badge status-active">Active</span>
+                                {% endif %}
+                            </div>
+                            <p class="mb-0">{{ registration.camp.location }}</p>
+                        </div>
+                        <div class="camp-body">
+                            <div class="camp-info">
+                                <i class="fas fa-calendar"></i>
+                                <span class="ms-2">{{ registration.camp.start_date.strftime('%b %d') }} - {{ registration.camp.end_date.strftime('%b %d, %Y') }}</span>
+                            </div>
+                            <div class="camp-info">
+                                <i class="fas fa-clock"></i>
+                                <span class="ms-2">{{ registration.camp.duration }} days</span>
+                            </div>
+                            <div class="camp-info">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span class="ms-2">{{ registration.camp.venue }}</span>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a href="{{ url_for('parent.view_camp_details', camp_id=registration.camp.id) }}" 
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-info-circle me-2"></i>View Details
+                                </a>
+                                {% if registration.camp.start_date > now %}
+                                <button class="btn btn-danger" onclick="cancelRegistration({{ registration.id }})">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Child filter functionality
+    const childFilters = document.querySelectorAll('.child-filter');
+    const childCamps = document.querySelectorAll('.child-camps');
+
+    childFilters.forEach(filter => {
+        filter.addEventListener('click', function() {
+            const childId = this.dataset.childId;
+            
+            // Toggle active state of buttons
+            childFilters.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show/hide relevant camp sections
+            childCamps.forEach(section => {
+                if (childId === 'all') {
+                    section.style.display = 'block';
+                } else {
+                    section.style.display = section.id === `child-${childId}` ? 'block' : 'none';
+                }
+            });
+        });
+    });
+});
+
+function cancelRegistration(registrationId) {
+    if (confirm('Are you sure you want to cancel this camp registration?')) {
+        fetch(`{{ url_for('parent.cancel_registration') }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ registration_id: registrationId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Failed to cancel registration');
+            }
+        });
+    }
+}
+</script>
+{% endblock %} 

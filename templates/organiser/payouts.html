@@ -1,0 +1,249 @@
+{% extends "organiser/base.html" %}
+
+{% block title %}Payouts - Campze Organiser{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payout-summary {
+        background: linear-gradient(45deg, #2ecc71, #27ae60);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+    .payout-summary h2 {
+        font-size: 2.5rem;
+        margin-bottom: 0;
+    }
+    .payment-status {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    .status-completed { background-color: #2ecc71; }
+    .status-pending { background-color: #f1c40f; }
+    .status-failed { background-color: #e74c3c; }
+    .filters {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .payment-card {
+        transition: transform 0.2s;
+    }
+    .payment-card:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3">Payouts</h1>
+        <p class="text-muted">Track your earnings and payment history</p>
+    </div>
+</div>
+
+<!-- Payout Summary -->
+<div class="row">
+    <div class="col-md-4">
+        <div class="payout-summary">
+            <p class="mb-1">Total Earnings</p>
+            <h2>R{{ "%.2f"|format(total_earnings) }}</h2>
+            <small>Lifetime earnings from all camps</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="payout-summary">
+            <p class="mb-1">Available for Payout</p>
+            <h2>R{{ "%.2f"|format(available_payout) }}</h2>
+            <small>Will be transferred on next payout date</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="payout-summary">
+            <p class="mb-1">Next Payout Date</p>
+            <h2>{{ next_payout_date.strftime('%d %b') }}</h2>
+            <small>Automatic transfer to your bank account</small>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filters mb-4">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label">Date Range</label>
+            <select class="form-select" id="dateFilter">
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="all">All time</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="statusFilter">
+                <option value="">All</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+                <option value="failed">Failed</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Camp</label>
+            <select class="form-select" id="campFilter">
+                <option value="">All Camps</option>
+                {% for camp in camps %}
+                <option value="{{ camp.id }}">{{ camp.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Sort By</label>
+            <select class="form-select" id="sortBy">
+                <option value="date">Date</option>
+                <option value="amount">Amount</option>
+                <option value="status">Status</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Payments List -->
+<div class="row" id="paymentsList">
+    {% for payment in payments %}
+    <div class="col-12 mb-3 payment-item">
+        <div class="card payment-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <h6 class="mb-1">{{ payment.registration.camp.name }}</h6>
+                        <small class="text-muted">{{ payment.created_at.strftime('%d %b %Y, %H:%M') }}</small>
+                    </div>
+                    <div class="col-md-3">
+                        <p class="mb-1">
+                            <span class="payment-status status-{{ payment.status|lower }}"></span>
+                            {{ payment.status }}
+                        </p>
+                        <small class="text-muted">Ref: {{ payment.reference }}</small>
+                    </div>
+                    <div class="col-md-3">
+                        <p class="mb-1">Parent</p>
+                        <small>{{ payment.registration.parent.name }}</small>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <h5 class="mb-1">R{{ "%.2f"|format(payment.amount) }}</h5>
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="viewPaymentDetails('{{ payment.id }}')">
+                            View Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            No payments found for the selected filters.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Payment Details Modal -->
+<div class="modal fade" id="paymentDetailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Payment Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateFilter = document.getElementById('dateFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const campFilter = document.getElementById('campFilter');
+    const sortBy = document.getElementById('sortBy');
+    const paymentsList = document.getElementById('paymentsList');
+
+    function filterPayments() {
+        const status = statusFilter.value;
+        const campId = campFilter.value;
+        const paymentItems = document.querySelectorAll('.payment-item');
+
+        paymentItems.forEach(item => {
+            const paymentStatus = item.querySelector('.payment-status').classList[1].replace('status-', '');
+            const campName = item.querySelector('h6').textContent;
+
+            const statusMatch = !status || paymentStatus === status;
+            const campMatch = !campId || campName === campFilter.options[campFilter.selectedIndex].text;
+
+            item.style.display = statusMatch && campMatch ? '' : 'none';
+        });
+    }
+
+    function sortPayments() {
+        const items = Array.from(document.querySelectorAll('.payment-item'));
+        const sortValue = sortBy.value;
+
+        items.sort((a, b) => {
+            switch(sortValue) {
+                case 'date':
+                    return new Date(b.querySelector('small').textContent) - 
+                           new Date(a.querySelector('small').textContent);
+                case 'amount':
+                    return parseFloat(b.querySelector('h5').textContent.replace('R', '')) - 
+                           parseFloat(a.querySelector('h5').textContent.replace('R', ''));
+                case 'status':
+                    return a.querySelector('.payment-status').classList[1].localeCompare(
+                           b.querySelector('.payment-status').classList[1]);
+                default:
+                    return 0;
+            }
+        });
+
+        items.forEach(item => paymentsList.appendChild(item));
+    }
+
+    dateFilter.addEventListener('change', filterPayments);
+    statusFilter.addEventListener('change', filterPayments);
+    campFilter.addEventListener('change', filterPayments);
+    sortBy.addEventListener('change', sortPayments);
+});
+
+function viewPaymentDetails(paymentId) {
+    const modal = new bootstrap.Modal(document.getElementById('paymentDetailsModal'));
+    modal.show();
+    
+    // Here you would typically fetch payment details via AJAX
+    // For now, we'll just show a loading spinner
+    setTimeout(() => {
+        document.querySelector('.modal-body').innerHTML = `
+            <div class="payment-details">
+                <h6>Payment #${paymentId}</h6>
+                <p>Loading payment details...</p>
+            </div>
+        `;
+    }, 1000);
+}
+</script>
+{% endblock %} 

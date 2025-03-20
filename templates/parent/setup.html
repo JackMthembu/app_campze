@@ -1,0 +1,145 @@
+{% extends "parent/base.html" %}
+
+{% block title %}Setup Guardian Profile - Campze Parent Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .setup-card {
+        max-width: 600px;
+        margin: 2rem auto;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(96, 208, 172, 0.1);
+    }
+    .setup-header {
+        background: linear-gradient(45deg, var(--primary), var(--primary-light));
+        color: white;
+        padding: 2rem;
+        border-radius: 15px 15px 0 0;
+        text-align: center;
+    }
+    .setup-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    .setup-body {
+        padding: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h2 class="text-center mb-4">Setup Guardian Profile</h2>
+                    <form id="guardianForm" method="POST">
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check me-2"></i>Create Guardian Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div id="addChildSection" class="card shadow mt-4" style="display: none;">
+                <div class="card-body">
+                    <h3 class="text-center mb-4">Add Your Children</h3>
+                    <form id="addChildForm">
+                        <div class="mb-3">
+                            <label for="childName" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="childName" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="childLastname" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="childLastname" name="lastname" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="childEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="childEmail" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="childDob" class="form-label">Date of Birth</label>
+                            <input type="date" class="form-control" id="childDob" name="date_of_birth" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="childGender" class="form-label">Gender</label>
+                            <select class="form-select" id="childGender" name="gender" required>
+                                <option value="">Select gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="childSchool" class="form-label">School</label>
+                            <select class="form-select" id="childSchool" name="school_id" required>
+                                <option value="">Select school</option>
+                                {% for school in schools %}
+                                <option value="{{ school.id }}">{{ school.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-plus me-2"></i>Add Child
+                            </button>
+                            <a href="{{ url_for('parent.dashboard') }}" class="btn btn-primary ms-2">
+                                <i class="fas fa-check me-2"></i>Finish Setup
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.getElementById('guardianForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    fetch('{{ url_for("parent.setup_profile") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            document.getElementById('addChildSection').style.display = 'block';
+            this.style.display = 'none';
+        }
+    });
+});
+
+document.getElementById('addChildForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+    
+    fetch('{{ url_for("parent.add_child") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            alert('Child added successfully!');
+            this.reset();
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %} 

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Campze - {% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #60D0AC;
+            --primary-dark: #4db796;
+            --primary-light: #e6f7f2;
+            --secondary-color: #2C3E50;
+            --accent-color: #FFA500;
+            --text-color: #2C3E50;
+            --text-muted: #6c757d;
+            --background-color: #f8f9fa;
+            --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --input-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--background-color) 0%, #ffffff 100%);
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-color);
+            min-height: 100vh;
+        }
+        
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative background elements */
+        .auth-container::before,
+        .auth-container::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .auth-container::before {
+            background: var(--primary-color);
+            top: -100px;
+            right: -100px;
+        }
+
+        .auth-container::after {
+            background: var(--accent-color);
+            bottom: -100px;
+            left: -100px;
+            animation-delay: -3s;
+        }
+        
+        .auth-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 480px;
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .auth-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        
+        .auth-header img {
+            max-width: 180px;
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .auth-header img:hover {
+            transform: scale(1.05);
+        }
+
+        .auth-header h2 {
+            color: var(--secondary-color);
+            font-weight: 600;
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            border: none;
+            padding: 0.875rem 1.5rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(96, 208, 172, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .form-control {
+            padding: 0.875rem 1.25rem;
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+            font-size: 0.95rem;
+            box-shadow: var(--input-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+        }
+
+        .alert-success {
+            background-color: #e6f7f2;
+            color: #2d7a64;
+        }
+
+        .alert-success::before {
+            background-color: var(--primary-color);
+        }
+
+        .alert-danger {
+            background-color: #fee7e7;
+            color: #c53030;
+        }
+
+        .alert-danger::before {
+            background-color: #c53030;
+        }
+
+        .alert-warning {
+            background-color: #fff7e6;
+            color: #976405;
+        }
+
+        .alert-warning::before {
+            background-color: var(--accent-color);
+        }
+        
+        .auth-links {
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .auth-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .auth-links a:hover {
+            color: var(--primary-dark);
+        }
+
+        .auth-links a::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: var(--primary-color);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.3s ease;
+        }
+
+        .auth-links a:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        /* Loading animation */
+        .loading {
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+            right: 1rem;
+            top: calc(50% - 10px);
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 576px) {
+            .auth-card {
+                padding: 1.5rem;
+            }
+
+            .auth-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .btn-primary {
+                padding: 0.75rem 1.25rem;
+            }
+        }
+
+        /* Floating Illustrations */
+        .floating-illustrations {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .illustration {
+            position: absolute;
+            opacity: 0.15;
+            animation: floatAnimation 8s infinite ease-in-out;
+        }
+
+        .tent {
+            top: 15%;
+            left: 10%;
+            animation-delay: -2s;
+        }
+
+        .compass {
+            top: 70%;
+            right: 15%;
+            animation-delay: -4s;
+        }
+
+        .backpack {
+            bottom: 20%;
+            left: 20%;
+            animation-delay: -6s;
+        }
+
+        .mountains {
+            top: 25%;
+            right: 10%;
+            animation-delay: -3s;
+        }
+
+        .campfire {
+            top: 60%;
+            left: 15%;
+            animation-delay: -5s;
+        }
+
+        @keyframes floatAnimation {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(5deg);
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Add floating illustrations -->
+    <div class="floating-illustrations">
+        <!-- Tent -->
+        <svg class="illustration tent" width="100" height="100" viewBox="0 0 100 100">
+            <path fill="#60D0AC" d="M10,80 L50,20 L90,80 L10,80 Z M40,80 L60,80 L60,60 L40,60 Z"/>
+        </svg>
+        
+        <!-- Compass -->
+        <svg class="illustration compass" width="80" height="80" viewBox="0 0 100 100">
+            <circle fill="#4db796" cx="50" cy="50" r="45"/>
+            <path fill="#60D0AC" d="M50,10 L60,50 L50,90 L40,50 Z"/>
+        </svg>
+        
+        <!-- Backpack -->
+        <svg class="illustration backpack" width="70" height="90" viewBox="0 0 100 120">
+            <path fill="#4db796" d="M30,30 L70,30 L70,100 L30,100 Z"/>
+            <path fill="#60D0AC" d="M40,20 L60,20 L60,30 L40,30 Z"/>
+        </svg>
+        
+        <!-- Mountains -->
+        <svg class="illustration mountains" width="120" height="80" viewBox="0 0 150 100">
+            <path fill="#60D0AC" d="M10,80 L50,20 L90,80 Z"/>
+            <path fill="#4db796" d="M60,80 L90,40 L120,80 Z"/>
+        </svg>
+        
+        <!-- Campfire -->
+        <svg class="illustration campfire" width="80" height="80" viewBox="0 0 100 100">
+            <path fill="#FFA500" d="M30,80 C0,50 20,20 50,10 C80,20 100,50 70,80 Z"/>
+            <path fill="#4db796" d="M20,85 L80,85 L75,90 L25,90 Z"/>
+        </svg>
+    </div>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <img src="{{ url_for('static', filename='img/images/logos/logo7.png') }}" alt="Campze Logo" onerror="this.src='https://via.placeholder.com/180x60?text=Campze'">
+                <h2 class="mb-4">{% block auth_title %}{% endblock %}</h2>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message | safe }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+
+            <div class="auth-links">
+                {% block auth_links %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

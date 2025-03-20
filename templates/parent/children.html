@@ -1,0 +1,554 @@
+{% extends "parent/base.html" %}
+
+{% block title %}Manage Children - Campze Parent Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .child-card {
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        transition: all 0.3s;
+        overflow: hidden;
+    }
+    .child-card:hover {
+        box-shadow: 0 5px 15px rgba(96, 208, 172, 0.1);
+        border-color: var(--primary);
+    }
+    .child-header {
+        background: linear-gradient(45deg, var(--primary), var(--primary-light));
+        color: white;
+        padding: 20px;
+    }
+    .child-body {
+        padding: 20px;
+    }
+    .child-info {
+        margin-bottom: 0.5rem;
+    }
+    .child-info i {
+        color: var(--primary);
+        width: 20px;
+    }
+    .medical-tag {
+        background-color: var(--primary-lighter);
+        color: var(--primary-darker);
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        margin: 2px;
+        display: inline-block;
+    }
+    .add-child-card {
+        border: 2px dashed var(--primary-light);
+        border-radius: 10px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .add-child-card:hover {
+        background-color: var(--primary-lighter);
+        border-color: var(--primary);
+    }
+    .add-child-icon {
+        color: var(--primary);
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    .required-field::after {
+        content: "*";
+        color: red;
+        margin-left: 4px;
+    }
+    .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 1rem 0;
+    }
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .divider span {
+        padding: 0 1rem;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    .pac-container {
+        z-index: 1051 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3">Manage Children</h1>
+                    <p class="text-muted">View and manage your children's profiles</p>
+                </div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addChildModal">
+                    <i class="fas fa-plus me-2"></i>Add New Child
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Children Grid -->
+    <div class="row g-4">
+        {% for child in children %}
+        <div class="col-md-6 col-lg-4">
+            <div class="child-card">
+                <div class="child-header">
+                    <div class="d-flex align-items-center">
+                        <img src="{{ child.profile_picture or url_for('static', filename='img/default-child.png') }}" 
+                             alt="{{ child.name }}" 
+                             class="rounded-circle me-3"
+                             style="width: 60px; height: 60px; object-fit: cover;">
+                        <div>
+                            <h5 class="mb-1">{{ child.name }}</h5>
+                            <p class="mb-0">{{ child.age }} years old</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="child-body">
+                    <div class="child-info">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span class="ms-2">Grade {{ child.grade or 'Not specified' }}</span>
+                    </div>
+                    <div class="child-info">
+                        <i class="fas fa-school"></i>
+                        <span class="ms-2">{{ child.school.name if child.school else 'Not specified' }}</span>
+                    </div>
+                    <div class="child-info">
+                        <i class="fas fa-swimming-pool"></i>
+                        <span class="ms-2">Swimming Level: {{ child.swimming_level or 'Not specified' }}</span>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="mb-3">Medical Information</h6>
+                    <div class="mb-3">
+                        {% if child.diabetic %}
+                            <span class="medical-tag"><i class="fas fa-syringe me-1"></i>Diabetic</span>
+                        {% endif %}
+                        {% if child.asthmatic %}
+                            <span class="medical-tag"><i class="fas fa-lungs me-1"></i>Asthmatic</span>
+                        {% endif %}
+                        {% if child.allergies %}
+                            <span class="medical-tag"><i class="fas fa-allergies me-1"></i>Allergies</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('parent.manage_indemnity', child_id=child.id) }}" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-file-medical me-2"></i>Medical Forms
+                        </a>
+                        <button class="btn btn-primary" onclick="editChild({{ child.id }})">
+                            <i class="fas fa-edit me-2"></i>Edit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Add Child Card -->
+        <div class="col-md-6 col-lg-4">
+            <div class="add-child-card" data-bs-toggle="modal" data-bs-target="#addChildModal">
+                <div class="text-center">
+                    <i class="fas fa-plus-circle add-child-icon"></i>
+                    <h5>Add New Child</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Child Modal -->
+<div class="modal fade" id="addChildModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-child me-2"></i>
+                    Add New Child
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addChildForm">
+                    <!-- Personal Information -->
+                    <h5 class="mb-3">
+                        <i class="fas fa-user me-2"></i>
+                        Personal Information
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required-field">First Name</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required-field">Last Name</label>
+                            <input type="text" class="form-control" name="lastname" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required-field">Date of Birth</label>
+                            <input type="date" class="form-control" name="date_of_birth" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required-field">Gender</label>
+                            <select class="form-select" name="gender" required>
+                                <option value="">Select gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- School Information -->
+                    <h5 class="mt-4 mb-3">
+                        <i class="fas fa-school me-2"></i>
+                        School Information
+                    </h5>
+                    <div class="mb-3">
+                        <label class="form-label">Select Existing School</label>
+                        <select class="form-select" id="school_id" name="school_id">
+                            <option value="">Select existing school</option>
+                            {% for school in schools %}
+                            <option value="{{ school.id }}">{{ school.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="text-center mb-3">
+                        <div class="divider">
+                            <span>OR</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#addSchoolModal">
+                            <i class="fas fa-plus me-2"></i>Add New School
+                        </button>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Grade</label>
+                            <input type="number" class="form-control" name="grade" min="0" max="12">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Swimming Level</label>
+                            <select class="form-select" name="swimming_level">
+                                <option value="">Select level</option>
+                                <option value="beginner">Beginner</option>
+                                <option value="intermediate">Intermediate</option>
+                                <option value="advanced">Advanced</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Profile Picture</label>
+                        <input type="file" class="form-control" name="profile_picture" accept="image/*">
+                    </div>
+
+                    <!-- Medical Information -->
+                    <h5 class="mt-4 mb-3">
+                        <i class="fas fa-heartbeat me-2"></i>
+                        Medical Information
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="diabetic" id="diabetic">
+                                <label class="form-check-label" for="diabetic">Diabetic</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="asthmatic" id="asthmatic">
+                                <label class="form-check-label" for="asthmatic">Asthmatic</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="heart_condition" id="heart_condition">
+                                <label class="form-check-label" for="heart_condition">Heart Condition</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="seizures" id="seizures">
+                                <label class="form-check-label" for="seizures">Seizures</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="wheelchair_support" id="wheelchair_support">
+                                <label class="form-check-label" for="wheelchair_support">Wheelchair Support</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="celiac_disease" id="celiac_disease">
+                                <label class="form-check-label" for="celiac_disease">Celiac Disease</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="epilepsy" id="epilepsy">
+                                <label class="form-check-label" for="epilepsy">Epilepsy</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Other Medical Conditions</label>
+                        <input type="text" class="form-control" name="other_medical_conditions">
+                    </div>
+
+                    <!-- Dietary Restrictions -->
+                    <h5 class="mt-4 mb-3">
+                        <i class="fas fa-utensils me-2"></i>
+                        Dietary Restrictions
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="nuts" id="nuts">
+                                <label class="form-check-label" for="nuts">Nuts Allergy</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="lactose" id="lactose">
+                                <label class="form-check-label" for="lactose">Lactose Intolerant</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="eggs" id="eggs">
+                                <label class="form-check-label" for="eggs">Eggs Allergy</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="soy" id="soy">
+                                <label class="form-check-label" for="soy">Soy Allergy</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="pork" id="pork">
+                                <label class="form-check-label" for="pork">No Pork</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="red_meat" id="red_meat">
+                                <label class="form-check-label" for="red_meat">No Red Meat</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="gluten" id="gluten">
+                                <label class="form-check-label" for="gluten">Gluten Free</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="sea_food" id="sea_food">
+                                <label class="form-check-label" for="sea_food">Seafood Allergy</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Other Dietary Restrictions</label>
+                        <input type="text" class="form-control" name="other">
+                    </div>
+
+                    <!-- Medical Aid Information -->
+                    <h5 class="mt-4 mb-3">
+                        <i class="fas fa-hospital me-2"></i>
+                        Medical Aid Information
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Medical Aid Name</label>
+                            <input type="text" class="form-control" name="medical_aid_name">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Medical Aid Number</label>
+                            <input type="text" class="form-control" name="medical_aid_number">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">ID Number of Holder</label>
+                            <input type="text" class="form-control" name="id_number_of_holder">
+                        </div>
+                    </div>
+
+                    <!-- Emergency Contact -->
+                    <h5 class="mt-4 mb-3">
+                        <i class="fas fa-phone-alt me-2"></i>
+                        Emergency Contact
+                    </h5>
+                    <div class="mb-3">
+                        <label class="form-label">Emergency Contact Details</label>
+                        <input type="text" class="form-control" name="emergency_contact" placeholder="Name and Phone Number">
+                    </div>
+
+                    <!-- Consents -->
+                    <h5 class="mt-4 mb-3">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Consents
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="photography_consent" id="photography_consent">
+                                <label class="form-check-label" for="photography_consent">Photography Consent</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="water_activities_consent" id="water_activities_consent">
+                                <label class="form-check-label" for="water_activities_consent">Water Activities Consent</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="addChildForm" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add Child
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add School Modal -->
+<div class="modal fade" id="addSchoolModal" tabindex="-1" aria-labelledby="addSchoolModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addSchoolModalLabel">
+                    <i class="fas fa-school me-2"></i>
+                    Add New School
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addSchoolForm">
+                    <div class="mb-3">
+                        <label for="schoolSearch" class="form-label">Search School</label>
+                        <input type="text" class="form-control" id="schoolSearch" placeholder="Start typing to search...">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="schoolName" class="form-label required-field">School Name</label>
+                        <input type="text" class="form-control" id="schoolName" name="name" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="schoolAddress" class="form-label required-field">Address</label>
+                        <input type="text" class="form-control" id="schoolAddress" name="address" required readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="schoolCity" class="form-label required-field">City</label>
+                        <input type="text" class="form-control" id="schoolCity" name="city" required readonly>
+                    </div>
+
+                    <!-- Hidden fields for Google Places data -->
+                    <input type="hidden" id="schoolLatitude" name="latitude">
+                    <input type="hidden" id="schoolLongitude" name="longitude">
+                    <input type="hidden" id="schoolStateId" name="state_id">
+                    <input type="hidden" id="schoolCountryId" name="country_id">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitSchool()">
+                    <i class="fas fa-plus me-2"></i>Add School
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_api_key }}&libraries=places"></script>
+<script>
+function editChild(childId) {
+    // Implement edit functionality
+    console.log('Editing child:', childId);
+}
+
+document.getElementById('addChildForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    
+    fetch('{{ url_for("parent.add_child") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to add child');
+        }
+    });
+});
+
+// Initialize Google Places Autocomplete
+function initGooglePlaces() {
+    const searchInput = document.getElementById('schoolSearch');
+    const autocomplete = new google.maps.places.Autocomplete(searchInput, {
+        types: ['school']
+    });
+
+    autocomplete.addListener('place_changed', function() {
+        const place = autocomplete.getPlace();
+        if (!place.geometry) {
+            return;
+        }
+
+        document.getElementById('schoolName').value = place.name;
+        document.getElementById('schoolAddress').value = place.formatted_address;
+        document.getElementById('schoolCity').value = place.address_components.find(
+            component => component.types.includes('locality')
+        )?.long_name || '';
+        document.getElementById('schoolLatitude').value = place.geometry.location.lat();
+        document.getElementById('schoolLongitude').value = place.geometry.location.lng();
+    });
+}
+
+function submitSchool() {
+    const formData = new FormData(document.getElementById('addSchoolForm'));
+    
+    fetch('{{ url_for("parent.add_school") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add the new school to the select dropdown
+            const select = document.getElementById('school_id');
+            const option = new Option(data.school.name, data.school.id);
+            select.add(option);
+            select.value = data.school.id;
+            
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addSchoolModal'));
+            modal.hide();
+        } else {
+            alert(data.message || 'Failed to add school');
+        }
+    });
+}
+
+// Initialize Google Places when the page loads
+document.addEventListener('DOMContentLoaded', initGooglePlaces);
+</script>
+{% endblock %}
+
+{% endblock %} 

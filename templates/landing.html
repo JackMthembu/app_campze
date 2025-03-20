@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to Campze - Your Adventure Awaits{% endblock %}
+
+{% block content %}
+<div class="container-fluid landing-hero">
+    <div class="row min-vh-100 align-items-center">
+        <div class="col-lg-6 text-center text-lg-start px-4 py-5">
+            <h1 class="display-4 fw-bold mb-4">Welcome to Campze</h1>
+            <p class="lead mb-4">
+                Discover amazing camping experiences for your children. Join our community of adventurers, 
+                parents, and camp organizers to create unforgettable memories.
+            </p>
+            <div class="d-grid gap-3 d-sm-flex justify-content-sm-start">
+                <a href="{{ url_for('auth_routes.login') }}" class="btn btn-primary btn-lg px-4 me-sm-3">
+                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                </a>
+                <a href="{{ url_for('auth_routes.signup') }}" class="btn btn-outline-primary btn-lg px-4">
+                    <i class="fas fa-user-plus me-2"></i>Register
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6 d-none d-lg-block">
+            <img src="{{ url_for('static', filename='img/main.png') }}" alt="Camping Adventure" class="img-fluid">
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-campground fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title h4">For Parents</h3>
+                    <p class="card-text">
+                        Find and book amazing camping experiences for your children. 
+                        Track their activities and stay connected.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-map-marked-alt fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title h4">For Organizers</h3>
+                    <p class="card-text">
+                        Create and manage your camping programs. Connect with parents 
+                        and provide unforgettable experiences.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-child fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title h4">For Children</h3>
+                    <p class="card-text">
+                        Embark on exciting adventures, make new friends, and create 
+                        lasting memories in safe and fun environments.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #60d0ac;
+        --primary-light: #7ddbbe;
+        --primary-lighter: #9ae6cf;
+        --primary-dark: #4eb796;
+        --primary-darker: #3c9e80;
+    }
+
+    .landing-hero {
+        background: linear-gradient(135deg, #f8f9fa, #ffffff);
+        overflow: hidden;
+    }
+
+    .btn-primary {
+        background-color: var(--primary);
+        border-color: var(--primary);
+        transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--primary-dark);
+        border-color: var(--primary-dark);
+        transform: translateY(-2px);
+    }
+
+    .btn-outline-primary {
+        color: var(--primary);
+        border-color: var(--primary);
+        transition: all 0.3s;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: var(--primary);
+        border-color: var(--primary);
+        transform: translateY(-2px);
+    }
+
+    .card {
+        transition: transform 0.3s;
+        border-radius: 15px;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+    }
+
+    .text-primary {
+        color: var(--primary) !important;
+    }
+
+    .shadow-sm {
+        box-shadow: 0 .125rem .25rem rgba(0,0,0,.075) !important;
+    }
+</style>
+{% endblock %} 

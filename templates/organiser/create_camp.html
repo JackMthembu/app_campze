@@ -1,0 +1,286 @@
+{% extends "organiser/base.html" %}
+
+{% block title %}Create Camp - Campze Organiser{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">Create New Camp</h2>
+                <a href="{{ url_for('organiser.camps') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Camps
+                </a>
+            </div>
+            
+            <div class="form-container">
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.csrf_token }}
+                    
+                    <!-- Basic Information Section -->
+                    <h4 class="section-header">
+                        <i class="fas fa-info-circle me-2"></i>Basic Information
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label required-field">Camp Name</label>
+                            {{ form.name(class="form-control", placeholder="Enter camp name") }}
+                            {% if form.name.errors %}
+                                {% for error in form.name.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="location" class="form-label required-field">Location</label>
+                            {{ form.location(class="form-control", placeholder="Enter camp location") }}
+                            {% if form.location.errors %}
+                                {% for error in form.location.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <label for="description" class="form-label required-field">Description</label>
+                            {{ form.description(class="form-control", rows="4", placeholder="Enter camp description") }}
+                            {% if form.description.errors %}
+                                {% for error in form.description.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <label for="camp_objectives" class="form-label">Camp Objectives</label>
+                            {{ form.camp_objectives(class="form-control", rows="3", placeholder="Enter camp objectives") }}
+                            {% if form.camp_objectives.errors %}
+                                {% for error in form.camp_objectives.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Camp Details Section -->
+                    <h4 class="section-header mt-4">
+                        <i class="fas fa-campground me-2"></i>Camp Details
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="camp_type" class="form-label required-field">Camp Type</label>
+                            {{ form.camp_type(class="form-control") }}
+                            {% if form.camp_type.errors %}
+                                {% for error in form.camp_type.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="camp_category" class="form-label required-field">Category</label>
+                            {{ form.camp_category(class="form-control") }}
+                            {% if form.camp_category.errors %}
+                                {% for error in form.camp_category.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="camp_status" class="form-label required-field">Status</label>
+                            {{ form.camp_status(class="form-control") }}
+                            {% if form.camp_status.errors %}
+                                {% for error in form.camp_status.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Dates Section -->
+                    <h4 class="section-header mt-4">
+                        <i class="fas fa-calendar-alt me-2"></i>Dates and Duration
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="start_date" class="form-label required-field">Start Date</label>
+                            {{ form.start_date(class="form-control", type="date") }}
+                            {% if form.start_date.errors %}
+                                {% for error in form.start_date.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="end_date" class="form-label required-field">End Date</label>
+                            {{ form.end_date(class="form-control", type="date") }}
+                            {% if form.end_date.errors %}
+                                {% for error in form.end_date.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="nights" class="form-label">Number of Nights</label>
+                            {{ form.nights(class="form-control", type="number", min="1") }}
+                            {% if form.nights.errors %}
+                                {% for error in form.nights.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Capacity and Age Range Section -->
+                    <h4 class="section-header mt-4">
+                        <i class="fas fa-users me-2"></i>Capacity and Age Range
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="capacity" class="form-label required-field">Capacity</label>
+                            {{ form.capacity(class="form-control", type="number", min="1") }}
+                            {% if form.capacity.errors %}
+                                {% for error in form.capacity.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="age_range_min" class="form-label">Minimum Age</label>
+                            {{ form.age_range_min(class="form-control", type="number", min="0") }}
+                            {% if form.age_range_min.errors %}
+                                {% for error in form.age_range_min.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="age_range_max" class="form-label">Maximum Age</label>
+                            {{ form.age_range_max(class="form-control", type="number", min="1") }}
+                            {% if form.age_range_max.errors %}
+                                {% for error in form.age_range_max.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Pricing Section -->
+                    <h4 class="section-header mt-4">
+                        <i class="fas fa-tag me-2"></i>Pricing
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="price_per_adult" class="form-label required-field">Price per Adult</label>
+                            {{ form.price_per_adult(class="form-control", type="number", step="0.01", placeholder="0.00") }}
+                            {% if form.price_per_adult.errors %}
+                                {% for error in form.price_per_adult.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="price_per_child" class="form-label required-field">Price per Child</label>
+                            {{ form.price_per_child(class="form-control", type="number", step="0.01", placeholder="0.00") }}
+                            {% if form.price_per_child.errors %}
+                                {% for error in form.price_per_child.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Image Upload Section -->
+                    <h4 class="section-header mt-4">
+                        <i class="fas fa-image me-2"></i>Camp Image
+                    </h4>
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="camp_image" class="form-label required-field">Upload Image</label>
+                            {{ form.camp_image(class="form-control", onchange="previewImage(this)") }}
+                            {% if form.camp_image.errors %}
+                                {% for error in form.camp_image.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                            <small class="text-muted">Accepted formats: jpg, png, jpeg</small>
+                            <img id="imagePreview" class="preview-image mt-3" alt="Image preview">
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus-circle me-2"></i>Create Camp
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewImage(input) {
+    const preview = document.getElementById('imagePreview');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+// Automatically calculate nights when dates change
+document.querySelectorAll('#start_date, #end_date').forEach(input => {
+    input.addEventListener('change', function() {
+        const startDate = new Date(document.querySelector('#start_date').value);
+        const endDate = new Date(document.querySelector('#end_date').value);
+        
+        if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+            const nights = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+            if (nights > 0) {
+                document.querySelector('#nights').value = nights;
+            }
+        }
+    });
+});
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const startDate = new Date(document.querySelector('#start_date').value);
+    const endDate = new Date(document.querySelector('#end_date').value);
+    const minAge = parseInt(document.querySelector('#age_range_min').value);
+    const maxAge = parseInt(document.querySelector('#age_range_max').value);
+    
+    if (endDate < startDate) {
+        e.preventDefault();
+        alert('End date cannot be earlier than start date');
+    }
+    
+    if (!isNaN(minAge) && !isNaN(maxAge) && maxAge < minAge) {
+        e.preventDefault();
+        alert('Maximum age must be greater than minimum age');
+    }
+});
+</script>
+{% endblock %} 
