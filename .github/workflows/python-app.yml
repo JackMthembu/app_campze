@@ -14,15 +14,18 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PYTHONWARNINGS: ignore::DeprecationWarning
+      PIP_NO_CACHE_DIR: "true"
+      PIP_DISABLE_PIP_VERSION_CHECK: "true"
 
     steps:
     - uses: actions/checkout@v3
     
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v4
+    - name: Set up Python 3.13
+      uses: actions/setup-python@v5
       with:
-        python-version: "3.11"
+        python-version: "3.13.2"
         cache: 'pip'
+        cache-dependency-path: requirements.txt
     
     - name: Install system dependencies
       run: |
@@ -35,13 +38,16 @@ jobs:
           wkhtmltopdf \
           unixodbc-dev \
           libjpeg-dev \
-          zlib1g-dev
+          zlib1g-dev \
+          python3-setuptools
     
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
         python -m pip install --upgrade build
-        pip install -r requirements.txt
+        python -m pip install --no-deps Pillow==10.1.0
+        python -m pip install -r requirements.txt --no-deps
+        python -m pip install -r requirements.txt
     
     - name: Lint with flake8
       run: |
