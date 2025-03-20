@@ -15,18 +15,15 @@ class Config:
     # Database configuration
     DB_USERNAME = os.getenv('DB_USERNAME')
     DB_PASSWORD = os.getenv('DB_PASSWORD')
-    DB_SERVER = os.getenv('DB_SERVER')
+    DB_SERVER = os.getenv('DB_SERVER', 'localhost')
+    DB_PORT = os.getenv('DB_PORT', '3306')
     DB_NAME = os.getenv('DB_NAME')
 
-    # Use SQL Server if credentials are provided, otherwise fallback to SQLite
-    if all([DB_USERNAME, DB_PASSWORD, DB_SERVER, DB_NAME]):
+    # Use MySQL if credentials are provided, otherwise fallback to SQLite
+    if all([DB_USERNAME, DB_PASSWORD, DB_NAME]):
         SQLALCHEMY_DATABASE_URI = (
-            f"mssql+pyodbc://{DB_USERNAME}:{DB_PASSWORD}@{DB_SERVER}/{DB_NAME}"
-            "?driver=ODBC+Driver+17+for+SQL+Server"
-            "&TrustServerCertificate=yes"
-            "&Encrypt=yes"
-            "&timeout=30"
-            "&connection_timeout=30"
+            f"mysql://{DB_USERNAME}:{DB_PASSWORD}@{DB_SERVER}:{DB_PORT}/{DB_NAME}"
+            "?charset=utf8mb4"
         )
         
         # SQLAlchemy configuration
@@ -39,7 +36,8 @@ class Config:
             'pool_pre_ping': True,
             'connect_args': {
                 'connect_timeout': 30,
-                'timeout': 30
+                'read_timeout': 30,
+                'write_timeout': 30
             }
         }
     else:
