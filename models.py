@@ -1,4 +1,3 @@
-import uuid
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
@@ -7,8 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer
 import random
 import string
-
-db = SQLAlchemy()
+from extensions import db
 
 # Database Models
 class User(UserMixin, db.Model):

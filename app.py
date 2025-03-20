@@ -1,7 +1,7 @@
 import os
 from flask import Flask, jsonify, render_template, send_from_directory
 from config import Config
-from extensions import mail, login_manager
+from extensions import mail, login_manager, db
 from models import Country, State, User
 from auth import auth_routes
 from routes import main, allowed_file
@@ -9,7 +9,6 @@ from flask_wtf.csrf import CSRFProtect
 from flask_cors import CORS
 from flask_migrate import Migrate
 from datetime import timedelta, datetime
-from models import db
 from profiles import profile_routes
 from booking import booking_routes
 from parent import parent_routes
