@@ -6,9 +6,9 @@ set -e
 # Print commands
 set -x
 
-# Install MySQL client libraries
+# Install MySQL client libraries and dependencies
 apt-get update
-apt-get install -y default-libmysqlclient-dev build-essential pkg-config
+apt-get install -y default-libmysqlclient-dev build-essential pkg-config python3-dev default-mysql-client
 
 # Activate the virtual environment if it exists
 if [ -d "antenv" ]; then
