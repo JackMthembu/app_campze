@@ -2,24 +2,24 @@
 name = "app_campze"
 version = "0.1.0"
 description = "Camp Management System"
-authors = ["Jack Mthembu"]
+authors = ["Your Name <your.email@example.com>"]
 readme = "README.md"
 packages = [{include = "app"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-Flask = "^3.0.2"
+Flask = "^3.0.0"
 Flask-SQLAlchemy = "^3.1.1"
 Flask-Login = "^0.6.3"
 Flask-WTF = "^1.2.1"
 Flask-Mail = "^0.9.1"
 Flask-Migrate = "^4.0.5"
 Flask-CORS = "^4.0.0"
-SQLAlchemy = "^2.0.27"
+SQLAlchemy = "^2.0.23"
 Werkzeug = "^3.0.1"
-python-dotenv = "^1.0.1"
+python-dotenv = "^1.0.0"
 email-validator = "^2.1.0"
-Pillow = "^10.2.0"
+Pillow = "^10.0.0"
 gunicorn = "^21.2.0"
 celery = "^5.3.6"
 redis = "^5.0.1"
@@ -33,10 +33,10 @@ Flask-Limiter = "^3.5.0"
 flask-babel = "^4.0.0"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.0.2"
-black = "^24.2.0"
-flake8 = "^7.0.0"
-isort = "^5.13.2"
+pytest = "^7.4.3"
+black = "^23.11.0"
+flake8 = "^6.1.0"
+isort = "^5.12.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -49,4 +49,7 @@ include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
-multi_line_output = 3 
+multi_line_output = 3
+
+[tool.poetry.scripts]
+start = "app:create_app" 
