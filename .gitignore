@@ -50,7 +50,30 @@ Thumbs.db
 
 # Logs
 *.log
+logs/
 
 # Media files
 media/
-uploads/ 
+uploads/
+
+# Local development
+instance/
+.webassets-cache
+
+# Coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Redis
+*.rdb 
