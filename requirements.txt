@@ -25,3 +25,4 @@ Flask-Bcrypt==1.0.1
 Flask-Caching==2.1.0
 Flask-Limiter==3.5.0
 flask-babel==4.0.0
+pyodbc==4.0.39
