@@ -29,10 +29,11 @@ instance/
 .webassets-cache
 
 # Virtual Environment
+.env
+.venv
+env/
 venv/
 ENV/
-env/
-.venv/
 
 # IDE
 .idea/

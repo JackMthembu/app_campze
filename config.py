@@ -7,6 +7,11 @@ load_dotenv()
 class Config:
     # Secret key for session management
     SECRET_KEY = os.environ.get('SECRET_KEY')
+
+    # Paystack configuration
+    PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
+    PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY')
+    PAYSTACK_BASE_URL = os.environ.get('PAYSTACK_BASE_URL')
     
     # Celery configuration
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')  
