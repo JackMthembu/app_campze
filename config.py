@@ -12,33 +12,28 @@ class Config:
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')  
     CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')  
     
-    # Database configuration
+     # Database configuration
     DB_USERNAME = os.getenv('DB_USERNAME')
     DB_PASSWORD = os.getenv('DB_PASSWORD')
-    DB_SERVER = os.getenv('DB_SERVER', 'localhost')
-    DB_PORT = os.getenv('DB_PORT', '3306')
+    DB_SERVER = os.getenv('DB_SERVER')
     DB_NAME = os.getenv('DB_NAME')
 
-    # Use MySQL if credentials are provided, otherwise fallback to SQLite
-    if all([DB_USERNAME, DB_PASSWORD, DB_NAME]):
+    # Use SQL Server if credentials are provided, otherwise fallback to SQLite
+    if all([DB_USERNAME, DB_PASSWORD, DB_SERVER, DB_NAME]):
         SQLALCHEMY_DATABASE_URI = (
-            f"mysql://{DB_USERNAME}:{DB_PASSWORD}@{DB_SERVER}:{DB_PORT}/{DB_NAME}"
-            "?charset=utf8mb4"
+            f"mssql+pyodbc://{DB_USERNAME}:{DB_PASSWORD}@{DB_SERVER}/{DB_NAME}"
+            "?driver=ODBC+Driver+17+for+SQL+Server"
+            "&TrustServerCertificate=yes"
+            "&Encrypt=yes"
         )
         
         # SQLAlchemy configuration
         SQLALCHEMY_ECHO = True
         SQLALCHEMY_ENGINE_OPTIONS = {
-            'pool_size': 10,
-            'max_overflow': 20,
+            'pool_size': 20,
             'pool_timeout': 30,
             'pool_recycle': 1800,
-            'pool_pre_ping': True,
-            'connect_args': {
-                'connect_timeout': 30,
-                'read_timeout': 30,
-                'write_timeout': 30
-            }
+            'pool_pre_ping': True
         }
     else:
         print("Warning: Using SQLite as fallback database")

@@ -1,11 +1,13 @@
 from datetime import date
+from flask import current_app
 from flask_wtf import FlaskForm
-from wtforms import DateField, HiddenField, IntegerField, SelectField, StringField, PasswordField, SubmitField, BooleanField, TextAreaField, DecimalField, ValidationError
+from wtforms import DateField, HiddenField, IntegerField, SelectField, StringField, PasswordField, SubmitField, BooleanField, TextAreaField, DecimalField, ValidationError, FileField, MultipleFileField
 from typing import Optional
 from wtforms.validators import DataRequired, Email, EqualTo, Optional, NumberRange, Length
-from flask_wtf.file import FileField, FileAllowed, FileRequired
+from flask_wtf.file import FileAllowed, FileRequired
 from extensions import db
 from models import Country, Currency, Camp, BookingForm, User, Guardian, Child, CampRegistration
+from wtforms.widgets import TextArea
 
 class SignUpForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -54,18 +56,18 @@ class ChangePasswordForm(FlaskForm):
 
 
 class ProfileForm(FlaskForm):
-    # Form fields with validators
-    email = StringField('Email', validators=[Optional(), Email()])
-    phone_number = StringField('Contact Number', validators=[Optional()])
-    next_of_keen_contacts = StringField('Next of Ken Contacts')
-    birthday = DateField('Birthday', format='%Y-%m-%d', validators=[Optional()])
+    name = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50)])
+    lastname = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=50)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    phone_number = StringField('Phone Number', validators=[Optional(), Length(max=15)])
+    country_id = SelectField('Country', coerce=str, validators=[Optional()])
+    date_of_birth = DateField('Birthday', format='%Y-%m-%d', validators=[Optional()])
     gender = SelectField('Gender', choices=[
         ('', 'Select Gender'),  
         ('M', 'Male'),
         ('F', 'Female'),
         ('N', 'Prefer not to say')
     ], validators=[DataRequired(message="Please select a gender")])
-    country = SelectField('Country', choices=[], validators=[Optional()])
     currency_id = StringField('Currency', render_kw={'readonly': True})
     submit = SubmitField('Update Profile')
 
@@ -73,7 +75,7 @@ class ProfileForm(FlaskForm):
         super(ProfileForm, self).__init__(formdata=formdata, *args, **kwargs)
         
         # Always load country choices, regardless of whether it's a GET or POST
-        self.country.choices = [(c.id, c.country) for c in Country.query.order_by(Country.country).all()]
+        self.country_id.choices = [(c.id, c.country) for c in Country.query.order_by(Country.country).all()]
         
         # Only populate from current_user if this is not a form submission
         if current_user:
@@ -83,25 +85,35 @@ class ProfileForm(FlaskForm):
                 # Pre-populate form data
                 self.email.data = user.email
                 self.phone_number.data = user.phone_number
-                self.next_of_keen_contacts.data = user.next_of_keen_contacts
-                self.birthday.data = user.birthday
+                self.date_of_birth.data = user.date_of_birth
                 self.gender.data = user.gender or ''
                 
                 if user.country_id:
-                    self.country.data = user.country_id
+                    self.country_id.data = user.country_id
                     currency = Currency.query.select_from(Country).join(Currency)\
                         .filter(Country.id == user.country_id).first()
                     if currency:
                         self.currency_id.data = currency.id
-                    self.country.render_kw = {'disabled': True}
+                    self.country_id.render_kw = {'disabled': True}
                 
                 # Set readonly/disabled fields based on existing data
-                if user.birthday:
-                    self.birthday.render_kw = {'readonly': True}
+                if user.date_of_birth:
+                    self.date_of_birth.render_kw = {'readonly': True}
                 if user.gender:
                     self.gender.render_kw = {'disabled': True}
                 if user.phone_number:
                     self.phone_number.render_kw = {'readonly': True}
+
+    def validate_country_id(self, field):
+        if field.data:
+            # Debug logging
+            current_app.logger.debug(f"Validating country: {field.data}")
+            current_app.logger.debug(f"Available choices: {dict(self.country_id.choices)}")
+            
+            # Check if the country exists in the database
+            country = Country.query.get(field.data)
+            if not country:
+                raise ValidationError('Invalid country selection.')
 
 class ProfilePicForm(FlaskForm):
     profile_picture = FileField('Upload Profile Picture', validators=[
@@ -181,9 +193,9 @@ class CampForm(FlaskForm):
     
     start_date = DateField('Start Date', validators=[DataRequired()])
     end_date = DateField('End Date', validators=[DataRequired()])
-    nights = IntegerField('Number of Nights', validators=[
+    nights = IntegerField('Number of nights', validators=[
         Optional(),
-        NumberRange(min=1, message='Number of nights must be at least 1')
+        NumberRange(min=0, message='Number of nights must be at least 0')
     ])
     
     price_per_adult = DecimalField('Price per Adult', validators=[
@@ -294,3 +306,61 @@ class SchoolForm(FlaskForm):
     state_id = HiddenField('State ID')
     country_id = HiddenField('Country ID')
     submit = SubmitField('Add School')
+
+class CampPackageForm(FlaskForm):
+    name = StringField('Package Name', validators=[DataRequired(), Length(max=100)])
+    description = TextAreaField('Description', validators=[DataRequired()])
+    min_students = IntegerField('Minimum Students', validators=[DataRequired(), NumberRange(min=1)])
+    max_students = IntegerField('Maximum Students', validators=[DataRequired(), NumberRange(min=1)])
+    price_per_student = DecimalField('Price per Student', validators=[DataRequired(), NumberRange(min=0)])
+    price_per_teacher = DecimalField('Price per Teacher', validators=[DataRequired(), NumberRange(min=0)])
+    meals = StringField('Meals', validators=[DataRequired(), Length(max=50)])
+    thumbnail = FileField('Thumbnail Image', validators=[Optional()])
+    photos = MultipleFileField('Additional Photos', validators=[Optional()])
+    duration_days = IntegerField('Duration (Days)', validators=[DataRequired(), NumberRange(min=1)])
+    included_activities = TextAreaField('Included Activities', validators=[Optional()])
+    requirements = TextAreaField('Requirements', validators=[Optional()])
+    status = SelectField('Status', choices=[
+        ('active', 'Active'),
+        ('inactive', 'Inactive')
+    ], validators=[DataRequired()])
+    camp_id = SelectField('Camp', coerce=int, validators=[Optional()])
+    tour_operator_id = SelectField('Tour Operator', coerce=int, validators=[Optional()])
+    submit = SubmitField('Save Package')
+
+    def validate_max_students(self, field):
+        if field.data < self.min_students.data:
+            raise ValidationError('Maximum students must be greater than minimum students')
+
+class PasswordForm(FlaskForm):
+    current_password = PasswordField('Current Password', validators=[DataRequired()])
+    new_password = PasswordField('New Password', validators=[
+        DataRequired(),
+        Length(min=8, message='Password must be at least 8 characters long')
+    ])
+    confirm_password = PasswordField('Confirm New Password', validators=[
+        DataRequired(),
+        EqualTo('new_password', message='Passwords must match')
+    ])
+
+class CompanyForm(FlaskForm):
+    company_name = StringField('Company Name', validators=[DataRequired(), Length(min=2, max=100)])
+    company_registration_number = StringField('Company Registration Number', validators=[DataRequired()])
+    tax_number = StringField('Tax Number', validators=[DataRequired()])
+
+class BankingDetailsForm(FlaskForm):
+    bank_id = SelectField('Bank', coerce=int, validators=[DataRequired()])
+    account_number = StringField('Account Number', validators=[DataRequired()])
+    account_holder_name = StringField('Account Holder Name', validators=[DataRequired()])
+    account_type = SelectField('Account Type', 
+                             choices=[
+                                 ('', 'Select Account Type'),
+                                 ('savings', 'Savings'),
+                                 ('checking', 'Checking'),
+                                 ('business', 'Business')
+                             ],
+                             validators=[DataRequired()])
+    branch = StringField('Branch', validators=[Optional()])
+    branch_code = StringField('Branch Code', validators=[Optional()])
+    account_iban = StringField('IBAN', validators=[Optional()])
+    is_primary = BooleanField('Set as Primary Account')

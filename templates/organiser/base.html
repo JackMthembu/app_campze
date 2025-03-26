@@ -222,18 +222,6 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'organiser.banking' %}active{% endif %}" 
-                   href="{{ url_for('organiser.banking') }}">
-                    <i class="fas fa-university"></i> Banking
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'organiser.payouts' %}active{% endif %}" 
-                   href="{{ url_for('organiser.payouts') }}">
-                    <i class="fas fa-money-bill-wave"></i> Payouts
-                </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link {% if request.endpoint == 'organiser.messages' %}active{% endif %}" 
                    href="{{ url_for('organiser.messages') }}">
                     <i class="fas fa-envelope"></i> Messages

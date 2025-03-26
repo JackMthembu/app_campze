@@ -1,0 +1,324 @@
+{% extends "tour_operator/base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Settings</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Tabs Navigation -->
+                    <ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if active_tab == 'profile' %}active{% endif %}" 
+                                    id="profile-tab" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#profile" 
+                                    type="button" 
+                                    role="tab">
+                                <i class="fas fa-user me-2"></i>Profile Settings
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if active_tab == 'password' %}active{% endif %}" 
+                                    id="password-tab" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#password" 
+                                    type="button" 
+                                    role="tab">
+                                <i class="fas fa-lock me-2"></i>Password
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if active_tab == 'company' %}active{% endif %}" 
+                                    id="company-tab" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#company" 
+                                    type="button" 
+                                    role="tab">
+                                <i class="fas fa-building me-2"></i>Company Details
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if active_tab == 'banking' %}active{% endif %}" 
+                                    id="banking-tab" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#banking" 
+                                    type="button" 
+                                    role="tab">
+                                <i class="fas fa-university me-2"></i>Banking Details
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="settingsTabsContent">
+                        <!-- Profile Settings Tab -->
+                        <div class="tab-pane fade {% if active_tab == 'profile' %}show active{% endif %}" 
+                             id="profile" 
+                             role="tabpanel">
+                            <form method="POST" action="{{ url_for('tour_operator.settings', tab='profile') }}">
+                                {{ profile_form.csrf_token }}
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        {{ profile_form.name.label(class="form-label") }}
+                                        {{ profile_form.name(class="form-control") }}
+                                        {% if profile_form.name.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in profile_form.name.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ profile_form.lastname.label(class="form-label") }}
+                                        {{ profile_form.lastname(class="form-control") }}
+                                        {% if profile_form.lastname.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in profile_form.lastname.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ profile_form.email.label(class="form-label") }}
+                                        {{ profile_form.email(class="form-control") }}
+                                        {% if profile_form.email.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in profile_form.email.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ profile_form.phone_number.label(class="form-label") }}
+                                        {{ profile_form.phone_number(class="form-control", placeholder=current_user.phone_number) }}
+                                        {% if profile_form.phone_number.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in profile_form.phone_number.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ profile_form.country_id.label(class="form-label") }}
+                                        {{ profile_form.country_id(class="form-select") }}
+                                        {% if profile_form.country_id.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in profile_form.country_id.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ profile_form.currency_id.label(class="form-label") }}
+                                        {{ profile_form.currency_id(class="form-control", placeholder=current_user.currency_id) }}
+                                        {% if profile_form.currency_id.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in profile_form.currency_id.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ profile_form.date_of_birth.label(class="form-label") }}
+                                        {{ profile_form.date_of_birth(class="form-control") }}
+                                        {% if profile_form.date_of_birth.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in profile_form.date_of_birth.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ profile_form.gender.label(class="form-label") }}
+                                        {{ profile_form.gender(class="form-control") }}
+                                        {% if profile_form.gender.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in profile_form.gender.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-12">
+                                        {{ profile_form.submit(class="btn btn-primary") }}
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Password Settings Tab -->
+                        <div class="tab-pane fade {% if active_tab == 'password' %}show active{% endif %}" 
+                             id="password" 
+                             role="tabpanel">
+                            <form method="POST" action="{{ url_for('tour_operator.settings', tab='password') }}">
+                                {{ password_form.csrf_token }}
+                                <div class="row g-3">
+                                    <div class="col-md-12">
+                                        <label class="form-label">Current Password</label>
+                                        <input type="password" 
+                                               class="form-control" 
+                                               name="current_password" 
+                                               required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">New Password</label>
+                                        <input type="password" 
+                                               class="form-control" 
+                                               name="new_password" 
+                                               required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Confirm New Password</label>
+                                        <input type="password" 
+                                               class="form-control" 
+                                               name="confirm_password" 
+                                               required>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary">Update Password</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Company Details Tab -->
+                        <div class="tab-pane fade {% if active_tab == 'company' %}show active{% endif %}" 
+                             id="company" 
+                             role="tabpanel">
+                            <form method="POST" action="{{ url_for('tour_operator.settings', tab='company') }}">
+                                {{ company_form.csrf_token }}
+                                <div class="row g-3">
+                                    <div class="col-md-12">
+                                        {{ company_form.company_name.label(class="form-label") }}
+                                        {{ company_form.company_name(class="form-control" + (" is-invalid" if company_form.company_name.errors else ""), value=company.company_name if company else '') }}
+                                        {% if company_form.company_name.errors %}
+                                            <div class="invalid-feedback">{{ company_form.company_name.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ company_form.company_registration_number.label(class="form-label") }}
+                                        {{ company_form.company_registration_number(class="form-control" + (" is-invalid" if company_form.company_registration_number.errors else ""), value=company.company_registration_number if company else '') }}
+                                        {% if company_form.company_registration_number.errors %}
+                                            <div class="invalid-feedback">{{ company_form.company_registration_number.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ company_form.tax_number.label(class="form-label") }}
+                                        {{ company_form.tax_number(class="form-control" + (" is-invalid" if company_form.tax_number.errors else ""), value=company.tax_number if company else '') }}
+                                        {% if company_form.tax_number.errors %}
+                                            <div class="invalid-feedback">{{ company_form.tax_number.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary">Update Company Details</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Banking Details Tab -->
+                        <div class="tab-pane fade {% if active_tab == 'banking' %}show active{% endif %}" 
+                             id="banking" 
+                             role="tabpanel">
+                            <form method="POST" action="{{ url_for('tour_operator.settings', tab='banking') }}">
+                                {{ banking_form.csrf_token }}
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Bank</label>
+                                        <select class="form-select" name="bank_id" required>
+                                            <option value="">Select Bank</option>
+                                            {% for bank in banks %}
+                                                <option value="{{ bank.id }}" {% if bank_details and bank_details.bank_id == bank.id %}selected{% endif %}>{{ bank.bank_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Account Number</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               name="account_number" 
+                                               value="{{ bank_details.account_number if bank_details else '' }}" 
+                                               required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Account Holder Name</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               name="account_holder_name" 
+                                               value="{{ bank_details.account_holder_name if bank_details else '' }}" 
+                                               required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Account Type</label>
+                                        <select class="form-select" name="account_type" required>
+                                            <option value="">Select Account Type</option>
+                                            <option value="savings" {% if bank_details and bank_details.account_type == 'savings' %}selected{% endif %}>Savings</option>
+                                            <option value="checking" {% if bank_details and bank_details.account_type == 'checking' %}selected{% endif %}>Checking</option>
+                                            <option value="business" {% if bank_details and bank_details.account_type == 'business' %}selected{% endif %}>Business</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Branch</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               name="branch" 
+                                               value="{{ bank_details.branch if bank_details else '' }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Branch Code</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               name="branch_code" 
+                                               value="{{ bank_details.branch_code if bank_details else '' }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">IBAN</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               name="account_iban" 
+                                               value="{{ bank_details.account_iban if bank_details else '' }}">
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary">Update Banking Details</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the active tab from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('tab') || 'profile';
+    
+    // Activate the corresponding tab
+    const tab = document.querySelector(`[data-bs-target="#${activeTab}"]`);
+    if (tab) {
+        tab.click();
+    }
+});
+</script>
+{% endblock %}

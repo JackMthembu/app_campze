@@ -1,0 +1,131 @@
+{% extends "tour_operator/base.html" %}
+
+{% block title %}Bookings{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">All Bookings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>School</th>
+                                    <th>Package</th>
+                                    <th>Students</th>
+                                    <th>Check-in</th>
+                                    <th>Status</th>
+                                    <th>Amount</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in bookings %}
+                                <tr>
+                                    <td>{{ booking.school_name }}</td>
+                                    <td>{{ booking.package_name }}</td>
+                                    <td>{{ booking.students }}</td>
+                                    <td>{{ booking.check_in_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ booking.status_color }}">
+                                            {{ booking.status }}
+                                        </span>
+                                    </td>
+                                    <td>R{{ "%.2f"|format(booking.total_amount) }}</td>
+                                    <td>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#bookingModal{{ booking.id }}">
+                                            View Details
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                <!-- Booking Details Modal -->
+                                <div class="modal fade" id="bookingModal{{ booking.id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Booking Details</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <h6 class="mb-3">School Information</h6>
+                                                        <p><strong>School:</strong> {{ booking.school_name }}</p>
+                                                        <p><strong>Contact Person:</strong> {{ booking.contact_name }}</p>
+                                                        <p><strong>Email:</strong> {{ booking.contact_email }}</p>
+                                                        <p><strong>Phone:</strong> {{ booking.contact_phone }}</p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <h6 class="mb-3">Booking Information</h6>
+                                                        <p><strong>Package:</strong> {{ booking.package_name }}</p>
+                                                        <p><strong>Students:</strong> {{ booking.students }}</p>
+                                                        <p><strong>Teachers:</strong> {{ booking.teachers }}</p>
+                                                        <p><strong>Status:</strong> 
+                                                            <span class="badge bg-{{ booking.status_color }}">
+                                                                {{ booking.status }}
+                                                            </span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-4">
+                                                    <div class="col-md-6">
+                                                        <h6 class="mb-3">Dates & Amount</h6>
+                                                        <p><strong>Check-in:</strong> {{ booking.check_in_date.strftime('%Y-%m-%d') }}</p>
+                                                        <p><strong>Check-out:</strong> {{ booking.check_out_date.strftime('%Y-%m-%d') }}</p>
+                                                        <p><strong>Total Amount:</strong> R{{ "%.2f"|format(booking.total_amount) }}</p>
+                                                        <p><strong>Booked On:</strong> {{ booking.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <h6 class="mb-3">Package Details</h6>
+                                                        <p><strong>Included Activities:</strong></p>
+                                                        <p>{{ booking.included_activities or 'None specified' }}</p>
+                                                        <p><strong>Requirements:</strong></p>
+                                                        <p>{{ booking.requirements or 'None specified' }}</p>
+                                                    </div>
+                                                </div>
+                                                {% if booking.special_requirements %}
+                                                <div class="row mt-4">
+                                                    <div class="col-12">
+                                                        <h6 class="mb-3">Special Requirements</h6>
+                                                        <p>{{ booking.special_requirements }}</p>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all modals
+    var modals = document.querySelectorAll('.modal');
+    modals.forEach(function(modal) {
+        new bootstrap.Modal(modal);
+    });
+});
+</script>
+{% endblock %}

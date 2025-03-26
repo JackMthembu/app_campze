@@ -1,0 +1,281 @@
+{% extends "tour_operator/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Welcome Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Welcome back, {{ current_user.name }}!</h1>
+            <p class="text-muted">Here's what's happening with your packages today.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('tour_operator.create_package') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Create New Package
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ stats.total_packages }}</h3>
+                        <p>Active Packages</p>
+                    </div>
+                    <div class="fs-1 opacity-50">
+                        <i class="fas fa-box"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #60d0d0, #4b90d0);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ stats.total_bookings }}</h3>
+                        <p>Total Bookings</p>
+                    </div>
+                    <div class="fs-1 opacity-50">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #d060ac, #9060d0);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>${{ "%.2f"|format(stats.total_revenue) }}</h3>
+                        <p>Total Revenue</p>
+                    </div>
+                    <div class="fs-1 opacity-50">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #60d090, #60d0d0);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ stats.total_students }}</h3>
+                        <p>Total Students</p>
+                    </div>
+                    <div class="fs-1 opacity-50">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Bookings -->
+        <div class="col-12 col-xl-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Bookings</h5>
+                    <a href="#" class="btn btn-sm btn-light">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>School</th>
+                                    <th>Package</th>
+                                    <th>Students</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in recent_bookings %}
+                                <tr>
+                                    <td>{{ booking.school_name }}</td>
+                                    <td>{{ booking.package_name }}</td>
+                                    <td>{{ booking.students }}</td>
+                                    <td>{{ booking.date.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ booking.status_color }}">
+                                            {{ booking.status }}
+                                        </span>
+                                    </td>
+                                    <td>${{ "%.2f"|format(booking.amount) }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <p class="text-muted mb-0">No recent bookings</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Popular Packages -->
+        <div class="col-12 col-xl-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Popular Packages</h5>
+                </div>
+                <div class="card-body">
+                    {% for package in popular_packages %}
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="stats-card" style="width: 48px; height: 48px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-box"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">{{ package.name }}</h6>
+                            <small class="text-muted">
+                                {{ package.bookings }} bookings
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <h6 class="mb-0">${{ "%.2f"|format(package.revenue) }}</h6>
+                            <small class="text-success">
+                                <i class="fas fa-arrow-up"></i> {{ package.growth }}%
+                            </small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted mb-0">No package data available</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Revenue Chart -->
+        <div class="col-12 col-xl-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Revenue Overview</h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-light active" data-period="weekly">Weekly</button>
+                        <button type="button" class="btn btn-sm btn-light" data-period="monthly">Monthly</button>
+                        <button type="button" class="btn btn-sm btn-light" data-period="yearly">Yearly</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Events -->
+        <div class="col-12 col-xl-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Upcoming Events</h5>
+                </div>
+                <div class="card-body">
+                    {% for event in upcoming_events %}
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="stats-card" style="width: 48px; height: 48px; padding: 0; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #60d0d0, #4b90d0);">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">{{ event.name }}</h6>
+                            <small class="text-muted">
+                                {{ event.date.strftime('%B %d, %Y') }}
+                            </small>
+                        </div>
+                        <div>
+                            <span class="badge bg-{{ event.status_color }}">
+                                {{ event.status }}
+                            </span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted mb-0">No upcoming events</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Revenue Chart
+const ctx = document.getElementById('revenueChart').getContext('2d');
+const revenueData = {{ revenue_data|safe }};
+const revenueChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: revenueData.labels,
+        datasets: [{
+            label: 'Revenue',
+            data: revenueData.values,
+            borderColor: '#60d0ac',
+            backgroundColor: 'rgba(96, 208, 172, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    borderDash: [2, 2]
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+// Period selector for revenue chart
+document.querySelectorAll('[data-period]').forEach(button => {
+    button.addEventListener('click', function() {
+        // Remove active class from all buttons
+        document.querySelectorAll('[data-period]').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        // Add active class to clicked button
+        this.classList.add('active');
+        
+        // Update chart data based on selected period
+        fetch(`/tour_operator/revenue-data?period=${this.dataset.period}`)
+            .then(response => response.json())
+            .then(data => {
+                revenueChart.data.labels = data.labels;
+                revenueChart.data.datasets[0].data = data.values;
+                revenueChart.update();
+            });
+    });
+});
+</script>
+{% endblock %} 

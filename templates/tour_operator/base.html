@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Tour Operator Portal{% endblock %} - Campze</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary: #60d0ac;
+            --primary-light: #8cdcc2;
+            --primary-lighter: #b8e8d8;
+            --primary-dark: #4ab090;
+            --primary-darker: #348f74;
+            --accent: #d06090;
+            --accent-light: #dc8cac;
+            --text-dark: #2c3e50;
+            --text-light: #ecf0f1;
+            --background-light: #f8f9fa;
+            --background-dark: #343a40;
+            --sidebar-width: 280px;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: var(--text-dark);
+            background-color: var(--background-light);
+            min-height: 100vh;
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background-color: var(--background-dark);
+            padding-top: 1rem;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            color: var(--text-light);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .nav-link {
+            color: var(--text-light) !important;
+            padding: 0.8rem 1.5rem;
+            margin: 0.2rem 1rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .nav-link i {
+            width: 1.5rem;
+            margin-right: 0.8rem;
+            font-size: 1.1rem;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: var(--primary);
+            color: var(--text-light) !important;
+        }
+
+        .sidebar .nav-item {
+            margin: 0.2rem 0;
+        }
+
+        /* Main content area */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        /* Top navbar */
+        .top-navbar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: var(--sidebar-width);
+            height: 60px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 99;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .content-wrapper {
+            margin-top: 60px;
+            padding: 2rem;
+        }
+
+        /* Card styling */
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background-color: var(--primary);
+            color: var(--text-light);
+            border-bottom: none;
+            padding: 1rem 1.5rem;
+        }
+
+        /* Stats card */
+        .stats-card {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--text-light);
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+
+        .stats-card h3 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-card p {
+            margin-bottom: 0;
+            opacity: 0.8;
+        }
+
+        /* Button styling */
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+
+        /* User dropdown */
+        .user-dropdown .dropdown-toggle::after {
+            display: none;
+        }
+
+        .user-dropdown .dropdown-menu {
+            right: 0;
+            left: auto;
+            margin-top: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .top-navbar {
+                left: 0;
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h4 class="mb-0">
+                <i class="fas fa-campground me-2"></i>Campze
+            </h4>
+            <p class="text-light mb-0"><small>Tour Operator Portal</small></p>
+        </div>
+        <ul class="nav flex-column mt-3">
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'tour_operator.dashboard' %}active{% endif %}" 
+                   href="{{ url_for('tour_operator.dashboard') }}">
+                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'tour_operator.list_packages' %}active{% endif %}"
+                   href="{{ url_for('tour_operator.list_packages') }}">
+                    <i class="fas fa-box"></i>Packages
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'tour_operator.bookings' %}active{% endif %}"
+                   href="{{ url_for('tour_operator.bookings') }}">
+                    <i class="fas fa-calendar-check"></i>Bookings
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'tour_operator.camps' %}active{% endif %}"
+                   href="#">
+                    <i class="fas fa-campground"></i>Camps
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'tour_operator.analytics' %}active{% endif %}"
+                   href="{{ url_for('tour_operator.analytics') }}">
+                    <i class="fas fa-chart-line"></i>Analytics
+                </a>
+            </li>
+            <li class="nav-item mt-4">
+                <a class="nav-link {% if request.endpoint == 'tour_operator.settings' %}active{% endif %}"
+                   href="{{ url_for('tour_operator.settings') }}">
+                    <i class="fas fa-cog"></i>Settings
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navbar -->
+        <nav class="top-navbar">
+            <button class="btn d-md-none" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="d-flex align-items-center">
+                <div class="dropdown user-dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-2"></i>
+                        {{ current_user.name }}
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('auth_routes.logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div class="content-wrapper">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Sidebar toggle for mobile
+        document.getElementById('sidebarToggle')?.addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('show');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.querySelector('.sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(event.target) && 
+                !sidebarToggle.contains(event.target)) {
+                sidebar.classList.remove('show');
+            }
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html> 

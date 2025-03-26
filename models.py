@@ -60,12 +60,15 @@ class User(UserMixin, db.Model):
     swimming_level = db.Column(db.String(50), nullable=True)
     post_camp_consent = db.Column(db.Boolean, default=False)
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=True)
-    # country =  db.Column(db.String(100), nullable=True)
-    # currency_id =  db.Column(db.String(3), nullable=True)
+    country_id = db.Column(db.String(2), db.ForeignKey('country.id'), nullable=True)
+    currency_id =  db.Column(db.String(3), nullable=True)
 
+    # Relationships
     company = db.relationship('Company', back_populates='users')
     guardian = db.relationship('Guardian', back_populates='user', uselist=False)
     banking_details = db.relationship('BankingDetails', back_populates='user', lazy=True)
+    tour_operator = db.relationship('TourOperator', back_populates='user', uselist=False)
+    school_admin_role = db.relationship('SchoolAdmin', back_populates='user', uselist=False)
 
     # Password property and methods
     @property
@@ -120,14 +123,15 @@ class Child(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     guardian_id = db.Column(db.Integer, db.ForeignKey('guardian.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    registrations = db.relationship('CampRegistration', backref='child', lazy=True, 
+    registrations = db.relationship('CampRegistration', lazy=True, 
                                   foreign_keys='CampRegistration.child_id')
 
 class CampRegistration(db.Model):
     __tablename__ = 'camp_registration'
 
     id = db.Column(db.Integer, primary_key=True)
-    camp_id = db.Column(db.Integer, db.ForeignKey('camp.id'), nullable=False)
+    camp_id = db.Column(db.Integer, db.ForeignKey('camp.id'), nullable=True)
+    package_id = db.Column(db.Integer, db.ForeignKey('camp_package.id'), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     child_id = db.Column(db.Integer, db.ForeignKey('child.id'), nullable=False)
     date = db.Column(db.Date, nullable=False)
@@ -137,6 +141,9 @@ class CampRegistration(db.Model):
 
     # Relationships
     user = db.relationship('User', backref=db.backref('camp_registrations', lazy=True))
+    camp = db.relationship('Camp', backref=db.backref('registrations', lazy=True))
+    package = db.relationship('CampPackage', backref=db.backref('registrations', lazy=True))
+    child = db.relationship('Child', backref=db.backref('camp_registrations', lazy=True))
 
 class Camp(db.Model):
     __tablename__ = 'camp'
@@ -165,7 +172,7 @@ class Camp(db.Model):
 
     # Relationships
     teacher = db.relationship('Teacher', backref=db.backref('camps', lazy=True))
-    registrations = db.relationship('CampRegistration', backref='camp', lazy=True)
+    packages = db.relationship('CampPackage', back_populates='camp', lazy=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -217,21 +224,25 @@ class Currency(db.Model):
     id = db.Column(db.String(3), primary_key=True)
     currency = db.Column(db.String(20), unique=True, nullable=False)
     symbol = db.Column(db.String(10), nullable=False)
-    code = db.Column(db.String(3), nullable=False)
     
 class Country(db.Model):
     __tablename__ = 'country'
 
-    id = db.Column(db.String(3), primary_key=True)
+    id = db.Column(db.String(2), primary_key=True)
     country = db.Column(db.String(20), unique=True, nullable=False)
-    code = db.Column(db.String(3), nullable=False)
+    numeric_code = db.Column(db.String(3), nullable=False)
     currency_id = db.Column(db.Integer, db.ForeignKey('currency.id'), nullable=False)
     
+    # Relationships
+    # states = db.relationship('State', backref='country', lazy=True)
+    # users = db.relationship('User', backref='country', lazy=True)
+    # banks = db.relationship('Banks', backref='country', lazy=True)
+
+
 class State(db.Model):
     __tablename__ = 'state'
     id = db.Column(db.String(3), primary_key=True)
     state = db.Column(db.String(20), unique=True, nullable=False)
-    code = db.Column(db.String(3), nullable=False)
     country_id = db.Column(db.Integer, db.ForeignKey('country.id'), nullable=False)
 
 class BankingDetails(db.Model):
@@ -303,6 +314,7 @@ class School(db.Model):
     # Relationships
     students = db.relationship('User', back_populates='school', foreign_keys='User.school_id')
     admin = db.relationship('User', back_populates='administered_schools', foreign_keys=[super_admin])
+    administrators = db.relationship('SchoolAdmin', back_populates='school', lazy=True)
 
 class Guardian(db.Model):
     __tablename__ = 'guardian'
@@ -344,7 +356,8 @@ class BookingForm(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    camp_id = db.Column(db.Integer, db.ForeignKey('camp.id'), nullable=False)
+    camp_id = db.Column(db.Integer, db.ForeignKey('camp.id'), nullable=True)
+    package_id = db.Column(db.Integer, db.ForeignKey('camp_package.id'), nullable=True)
     adults = db.Column(db.Integer, nullable=False)
     children = db.Column(db.Integer, nullable=False)
     check_in_date = db.Column(db.Date, nullable=False)
@@ -358,6 +371,7 @@ class BookingForm(db.Model):
     # Relationships
     user = db.relationship('User', backref=db.backref('bookings', lazy=True))
     camp = db.relationship('Camp', backref=db.backref('bookings', lazy=True))
+    
 
     def __init__(self, **kwargs):
         super(BookingForm, self).__init__(**kwargs)
@@ -477,6 +491,7 @@ class Company(db.Model):
     company_registration_number = db.Column(db.String(100), nullable=False)
     tax_number =  db.Column(db.String(100), nullable=False)
     users = db.relationship('User', back_populates='company')
+    tour_operators = db.relationship('TourOperator', back_populates='company')
 
 def generate_camp_code():
     """Generate a unique camp code with minimum 5 digits"""
@@ -493,3 +508,69 @@ def generate_camp_code():
         camp_code = f"{prefix}{year}{random_digits}"
     
     return camp_code
+
+class TourOperator(db.Model):
+    __tablename__ = 'tour_operator'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+
+    # Relationships
+    user = db.relationship('User', back_populates='tour_operator')
+    packages = db.relationship('CampPackage', back_populates='tour_operator', lazy=True)
+    company = db.relationship('Company', back_populates='tour_operators')
+
+class SchoolAdmin(db.Model):
+    __tablename__ = 'school_admin'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
+
+    # Relationships
+    user = db.relationship('User', back_populates='school_admin_role')
+    school = db.relationship('School', back_populates='administrators')
+
+class CampPackage(db.Model):
+    __tablename__ = 'camp_package'
+
+    id = db.Column(db.Integer, primary_key=True)
+    camp_id = db.Column(db.Integer, db.ForeignKey('camp.id'), nullable=True)
+    tour_operator_id = db.Column(db.Integer, db.ForeignKey('tour_operator.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    min_students = db.Column(db.Integer, nullable=False)
+    max_students = db.Column(db.Integer, nullable=False)
+    price_per_student = db.Column(db.Numeric(10, 2), nullable=False)
+    price_per_teacher = db.Column(db.Numeric(10, 2), nullable=False)
+    meals = db.Column(db.String(50), nullable=True)
+    thumbnail = db.Column(db.String(255), nullable=True)  # Main thumbnail image
+    photos = db.Column(db.JSON, nullable=True)  # Store multiple photo URLs as JSON array
+    duration_days = db.Column(db.Integer, nullable=False)
+    included_activities = db.Column(db.Text)
+    requirements = db.Column(db.Text)
+    status = db.Column(db.String(20), default='active')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    camp = db.relationship('Camp', back_populates='packages')
+    tour_operator = db.relationship('TourOperator', back_populates='packages')
+
+    def to_dict(self):
+        """Convert package to dictionary"""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'min_students': self.min_students,
+            'max_students': self.max_students,
+            'price_per_student': float(self.price_per_student),
+            'price_per_teacher': float(self.price_per_teacher),
+            'duration_days': self.duration_days,
+            'included_activities': self.included_activities,
+            'requirements': self.requirements,
+            'status': self.status,
+            'camp': self.camp.to_dict()
+        }

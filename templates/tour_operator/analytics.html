@@ -1,0 +1,265 @@
+{% extends "tour_operator/base.html" %}
+
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Total Bookings</h6>
+                    <h3 class="mb-0">{{ total_bookings }}</h3>
+                    <small class="text-{{ 'success' if booking_growth >= 0 else 'danger' }}">
+                        {{ "%.1f"|format(booking_growth) }}% from last month
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Total Revenue</h6>
+                    <h3 class="mb-0">R{{ "%.2f"|format(total_revenue) }}</h3>
+                    <small class="text-{{ 'success' if revenue_growth >= 0 else 'danger' }}">
+                        {{ "%.1f"|format(revenue_growth) }}% from last month
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Total Students</h6>
+                    <h3 class="mb-0">{{ total_students }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Avg. Revenue per Booking</h6>
+                    <h3 class="mb-0">R{{ "%.2f"|format(avg_revenue_per_booking) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Monthly Performance</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Booking Status Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Package Performance</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="packageChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Peak Booking Months</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="peakMonthsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Parse JSON data from template
+    const monthlyData = {{ monthly_data|safe }};
+    const packageData = {{ package_data|safe }};
+    const statusData = {{ status_data|safe }};
+    const peakMonthsData = {{ peak_months_data|safe }};
+
+    // Monthly Performance Chart
+    new Chart(document.getElementById('monthlyChart'), {
+        type: 'line',
+        data: {
+            labels: monthlyData.labels,
+            datasets: [
+                {
+                    label: 'Revenue',
+                    data: monthlyData.revenue,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Bookings',
+                    data: monthlyData.bookings,
+                    borderColor: 'rgb(255, 99, 132)',
+                    tension: 0.1,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Revenue (R)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Number of Bookings'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Status Distribution Chart
+    new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: statusData.labels,
+            datasets: [{
+                data: statusData.values,
+                backgroundColor: [
+                    'rgb(75, 192, 192)',
+                    'rgb(255, 99, 132)',
+                    'rgb(255, 205, 86)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Package Performance Chart
+    new Chart(document.getElementById('packageChart'), {
+        type: 'bar',
+        data: {
+            labels: packageData.labels,
+            datasets: [
+                {
+                    label: 'Revenue',
+                    data: packageData.revenue,
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Bookings',
+                    data: packageData.bookings,
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Revenue (R)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Number of Bookings'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Peak Months Chart
+    new Chart(document.getElementById('peakMonthsChart'), {
+        type: 'bar',
+        data: {
+            labels: peakMonthsData.labels,
+            datasets: [{
+                label: 'Number of Bookings',
+                data: peakMonthsData.values,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Bookings'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

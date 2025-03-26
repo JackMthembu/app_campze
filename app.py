@@ -1,24 +1,16 @@
 import os
-from flask import Flask, jsonify, render_template, send_from_directory
+from flask import Flask, current_app, jsonify, render_template, send_from_directory
+from flask_login import login_required
 from config import Config
-from extensions import mail, login_manager, db
-from models import Country, State, User
-from auth import auth_routes
-from routes import main, allowed_file
 from flask_wtf.csrf import CSRFProtect
 from flask_cors import CORS
-from flask_migrate import Migrate
 from datetime import timedelta, datetime
-from profiles import profile_routes
-from booking import booking_routes
-from parent import parent_routes
-from organiser import organiser
-from errors import errors
 import time
-from sqlalchemy import exc
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
-
 from dotenv import load_dotenv
+from models import Currency
+from tour_operator import tour_operator
+
 load_dotenv()
 
 def create_app():
@@ -53,39 +45,47 @@ def create_app():
     if not os.path.exists(app.config['UPLOAD_FOLDER_PROFILE']):
         os.makedirs(app.config['UPLOAD_FOLDER_PROFILE'])
 
-    # Add template context processor for global variables
-    @app.context_processor
-    def utility_processor():
-        return {
-            'now': datetime.now()
-        }
-
     # Initialize extensions
+    from extensions import mail, login_manager, db, migrate
+    
+    db.init_app(app)
+    mail.init_app(app)
+    migrate.init_app(app, db)
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth_routes.login'
+
+    # Initialize CSRF protection
     csrf = CSRFProtect(app)
     csrf.init_app(app)
     WTF_CSRF_TIME_LIMIT = None
 
+    # Initialize CORS
     CORS(app, resources={r"/api/*": {"origins": ["https://campze.co", "https://campze.com"]}})
     
     # Initialize database with retry logic
     max_retries = 3
     retry_delay = 5  # seconds
     
-    for attempt in range(max_retries):
-        try:
-            db.init_app(app)
-            # Test the connection
-            with app.app_context():
+    with app.app_context():
+        for attempt in range(max_retries):
+            try:
                 db.engine.connect()
-            break
-        except OperationalError as e:
-            if attempt == max_retries - 1:
-                app.logger.error(f"Failed to connect to database after {max_retries} attempts: {str(e)}")
-                raise
-            app.logger.warning(f"Database connection attempt {attempt + 1} failed. Retrying in {retry_delay} seconds...")
-            time.sleep(retry_delay)
+                break
+            except OperationalError as e:
+                if attempt == max_retries - 1:
+                    app.logger.error(f"Failed to connect to database after {max_retries} attempts: {str(e)}")
+                    raise
+                app.logger.warning(f"Database connection attempt {attempt + 1} failed. Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+
+    # Add template context processor for global variables
+    @app.context_processor
+    def utility_processor():
+        return {
+            'now': datetime.now()
+        }
     
-    # Set up database session handling with error handling
+    # Set up database session handling
     @app.teardown_appcontext
     def shutdown_session(exception=None):
         if exception:
@@ -100,12 +100,6 @@ def create_app():
         db.session.rollback()
         return render_template('errors/500.html'), 500
 
-    # Initialize other extensions
-    mail.init_app(app)
-    migrate = Migrate(app, db)
-    login_manager.init_app(app)
-    login_manager.login_view = 'auth_routes.login'
-
     @login_manager.user_loader
     def load_user(user_id):
         try:
@@ -113,6 +107,16 @@ def create_app():
         except SQLAlchemyError as e:
             app.logger.error(f"Error loading user {user_id}: {str(e)}")
             return None
+
+    # Import routes and models after extensions are initialized
+    from models import Country, State, User
+    from auth import auth_routes
+    from routes import main, allowed_file
+    from profiles import profile_routes
+    from booking import booking_routes
+    from parent import parent_routes
+    from organiser import organiser
+    from errors import errors
 
     # Register blueprints
     app.register_blueprint(main)
@@ -122,12 +126,11 @@ def create_app():
     app.register_blueprint(parent_routes, url_prefix='/parent')
     app.register_blueprint(organiser, url_prefix='/organiser')
     app.register_blueprint(errors)
+    app.register_blueprint(tour_operator, url_prefix='/tour_operator')
 
     # Error handlers
     @app.errorhandler(404)
     def page_not_found(e):
-        """Handle 404 errors with a custom page"""
-        # note that we set the 404 status explicitly
         return render_template('errors/404.html'), 404
     
     @app.errorhandler(500)
@@ -149,12 +152,40 @@ def create_app():
         except Exception as e:
             db.session.rollback()
             return jsonify({'error': str(e)}), 500
-
+    
+    @app.route('/api/get_currency/<country_id>')
+    @login_required
+    def get_currency(country_id):
+        try:
+            # Get country and join with currency
+            currency = Currency.query.select_from(Country).join(Currency)\
+                .filter(Country.id == country_id).first()
+            
+            if not currency:
+                current_app.logger.error(f"No currency found for country: {country_id}")
+                return jsonify({
+                    'success': False,
+                    'error': 'Currency not found'
+                }), 404
+            
+            current_app.logger.debug(f"Found currency: {currency.id} for country: {country_id}")
+            
+            return jsonify({
+                'success': True,
+                'currency_id': currency.id
+            })
+            
+        except Exception as e:
+            current_app.logger.error(f"Error fetching currency for country {country_id}: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
 
     @app.route('/favicon.ico')
     def favicon():
         return send_from_directory(os.path.join(app.root_path, 'static/img'),
-                                 'favicon.png', mimetype='image/png')
+                                'favicon.png', mimetype='image/png')
 
     return app
 

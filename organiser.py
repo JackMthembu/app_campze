@@ -174,29 +174,6 @@ def camp_registrations(camp_id):
     registrations = CampRegistration.query.filter_by(camp_id=camp_id).all()
     return render_template('organiser/registrations.html', camp=camp, registrations=registrations)
 
-@organiser.route('/banking', methods=['GET', 'POST'])
-@organiser_required
-def banking():
-    bank_details = BankingDetails.query.filter_by(user_id=current_user.id).first()
-    form = BankDetailsForm(obj=bank_details)
-    
-    if form.validate_on_submit():
-        if not bank_details:
-            bank_details = BankingDetails(user_id=current_user.id)
-        
-        bank_details.bank_name = form.bank_name.data
-        bank_details.account_holder = form.account_holder.data
-        bank_details.account_number = form.account_number.data
-        bank_details.branch_code = form.branch_code.data
-        bank_details.account_type = form.account_type.data
-        
-        db.session.add(bank_details)
-        db.session.commit()
-        flash('Banking details updated successfully!', 'success')
-        return redirect(url_for('organiser.banking'))
-    
-    return render_template('organiser/banking.html', form=form, bank_details=bank_details)
-
 @organiser.route('/payouts')
 @organiser_required
 def payouts():
@@ -338,3 +315,4 @@ def settings():
         return redirect(url_for('organiser.settings'))
         
     return render_template('organiser/settings.html') 
+
