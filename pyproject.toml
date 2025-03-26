@@ -52,4 +52,9 @@ profile = "black"
 multi_line_output = 3
 
 [tool.poetry.scripts]
-start = "app:create_app" 
+start = "app:create_app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v" 
