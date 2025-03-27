@@ -10,6 +10,12 @@ set -x
 echo "Waiting for any pending operations to complete..."
 sleep 30
 
+# Set environment variables
+export PORT=8181
+export FLASK_APP=app
+export FLASK_ENV=production
+export PYTHONPATH=/home/site/wwwroot
+
 # Install dependencies
 echo "Installing dependencies..."
 pip install -r requirements.txt
@@ -46,4 +52,5 @@ gunicorn --bind=0.0.0.0:$PORT \
          --chdir /home/site/wwwroot \
          --forwarded-allow-ips="*" \
          --proxy-allow-ips="*" \
+         --preload \
          app:app 
