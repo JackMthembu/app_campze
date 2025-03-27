@@ -10,12 +10,14 @@ set -x
 export FLASK_APP=app
 export FLASK_ENV=production
 export PYTHONPATH=/home/site/wwwroot
+export PORT=8181
 
 # Debug: Print environment variables
 echo "Current environment variables:"
 echo "FLASK_APP=$FLASK_APP"
 echo "FLASK_ENV=$FLASK_ENV"
 echo "PYTHONPATH=$PYTHONPATH"
+echo "PORT=$PORT"
 
 # Install dependencies
 echo "Installing dependencies..."
@@ -39,6 +41,15 @@ chmod -R 755 /home/site/wwwroot
 echo "Waiting for file system operations to complete..."
 sleep 10
 
-# Start the application with Gunicorn using config file
-echo "Starting the application using Gunicorn configuration..."
-exec gunicorn -c gunicorn.conf.py app:app 
+# Start the application with Gunicorn
+echo "Starting the application on port 8181..."
+exec gunicorn --bind=0.0.0.0:8181 \
+    --workers=4 \
+    --timeout=120 \
+    --access-logfile=- \
+    --error-logfile=- \
+    --capture-output \
+    --enable-stdio-inheritance \
+    --preload \
+    --log-level=debug \
+    app:app 
