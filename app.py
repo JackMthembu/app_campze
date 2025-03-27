@@ -10,7 +10,7 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from dotenv import load_dotenv
 from models import Currency, Country, State, User
 from tour_operator import tour_operator
-from app import db, login_manager, mail, migrate, celery
+from extensions import db, login_manager, mail, migrate, celery
 
 load_dotenv()
 
