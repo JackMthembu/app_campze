@@ -40,7 +40,14 @@ def create_app():
     # API and upload configurations
     app.config['GOOGLE_MAPS_API_KEY'] = os.getenv('GOOGLE_MAPS_API_KEY')
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-    app.config['UPLOAD_FOLDER_PROFILE'] = 'static/uploads/profile'
+    
+    # Set upload folder based on environment
+    if os.environ.get('WEBSITE_HOSTNAME'):
+        # Azure environment
+        app.config['UPLOAD_FOLDER_PROFILE'] = '/home/site/wwwroot/static/uploads/profile'
+    else:
+        # Local environment
+        app.config['UPLOAD_FOLDER_PROFILE'] = 'static/uploads/profile'
 
     # Ensure upload directory exists
     if not os.path.exists(app.config['UPLOAD_FOLDER_PROFILE']):

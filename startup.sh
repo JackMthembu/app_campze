@@ -30,14 +30,14 @@ ls -la
 echo "PYTHONPATH:"
 echo $PYTHONPATH
 
-# Start Gunicorn with more detailed configuration
+# Start Gunicorn with production configuration
 gunicorn --bind=0.0.0.0:8000 \
          --workers=4 \
          --timeout=120 \
          --access-logfile=- \
          --error-logfile=- \
-         --log-level=debug \
+         --log-level=info \
          --capture-output \
          --enable-stdio-inheritance \
-         --reload \
+         --static-map /static=/home/site/wwwroot/static \
          app:app 
