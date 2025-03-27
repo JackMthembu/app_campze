@@ -24,6 +24,17 @@ def create_app():
         app.root_path = '/home/site/wwwroot'
         app.static_folder = '/home/site/wwwroot/static'
         app.template_folder = '/home/site/wwwroot/templates'
+        
+        # Ensure directories exist
+        os.makedirs(app.static_folder, exist_ok=True)
+        os.makedirs(app.template_folder, exist_ok=True)
+        os.makedirs('/home/site/wwwroot/uploads', exist_ok=True)
+        
+        # Log directory structure for debugging
+        app.logger.info(f"Application root: {app.root_path}")
+        app.logger.info(f"Static folder: {app.static_folder}")
+        app.logger.info(f"Template folder: {app.template_folder}")
+        app.logger.info(f"Directory contents: {os.listdir(app.root_path)}")
     else:
         # Local environment
         app.root_path = os.path.abspath(os.path.dirname(__file__))

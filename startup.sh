@@ -30,15 +30,27 @@ ls -la
 echo "PYTHONPATH:"
 echo $PYTHONPATH
 
-# Ensure required directories exist
+# Find the temporary directory containing the application
+TEMP_DIR=$(find /tmp -maxdepth 1 -type d -name "8dd6d*" | head -n 1)
+if [ -z "$TEMP_DIR" ]; then
+    echo "Error: Could not find temporary directory"
+    exit 1
+fi
+
+echo "Found temporary directory: $TEMP_DIR"
+
+# Create required directories
 mkdir -p /home/site/wwwroot/static
 mkdir -p /home/site/wwwroot/templates
 mkdir -p /home/site/wwwroot/uploads
 
-# Copy application files to the correct location if needed
-if [ -d "/tmp/8dd6d3130a06cf4" ]; then
-    cp -r /tmp/8dd6d3130a06cf4/* /home/site/wwwroot/
-fi
+# Copy application files to the correct location
+echo "Copying application files..."
+cp -r $TEMP_DIR/* /home/site/wwwroot/
+
+# Verify the files were copied
+echo "Verifying files in wwwroot:"
+ls -la /home/site/wwwroot/
 
 # Start Gunicorn with production configuration
 gunicorn --bind=0.0.0.0:8000 \
