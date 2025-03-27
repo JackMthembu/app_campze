@@ -29,4 +29,8 @@ tmp_upload_dir = None
 
 # SSL
 keyfile = None
-certfile = None 
+certfile = None
+
+capture_output = True
+enable_stdio_inheritance = True
+preload_app = True 
