@@ -54,4 +54,4 @@ exec gunicorn --bind=0.0.0.0:8181 \
     --enable-stdio-inheritance \
     --preload \
     --log-level=debug \
-    app:app 
+    app:app

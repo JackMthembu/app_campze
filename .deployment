@@ -26,4 +26,4 @@ SCM_USE_MSDEPLOY=true
 SCM_DO_BUILD_DURING_DEPLOYMENT_DELAY=30
 
 [deployment]
-command = bash deploy.sh
+command = bash startup.sh
