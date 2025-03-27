@@ -28,7 +28,7 @@ mkdir -p /home/site/wwwroot/uploads
 
 # Copy application files
 echo "Copying application files..."
-cp -r . /home/site/wwwroot/
+cp -r ./* /home/site/wwwroot/
 
 # Set permissions
 echo "Setting permissions..."
@@ -38,19 +38,14 @@ chmod -R 755 /home/site/wwwroot
 echo "Waiting for file system operations to complete..."
 sleep 10
 
-# Start the application
+# Start the application with Gunicorn
 echo "Starting the application..."
-gunicorn --bind=0.0.0.0:$PORT \
-         --workers=4 \
-         --timeout=120 \
-         --access-logfile=- \
-         --error-logfile=- \
-         --log-level=info \
-         --capture-output \
-         --enable-stdio-inheritance \
-         --static-map /static=/home/site/wwwroot/static \
-         --chdir /home/site/wwwroot \
-         --forwarded-allow-ips="*" \
-         --proxy-allow-ips="*" \
-         --preload \
-         app:app 
+exec gunicorn --bind=0.0.0.0:$PORT \
+    --workers=4 \
+    --timeout=120 \
+    --access-logfile=- \
+    --error-logfile=- \
+    --capture-output \
+    --enable-stdio-inheritance \
+    --preload \
+    app:app 
