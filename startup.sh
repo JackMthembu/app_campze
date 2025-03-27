@@ -39,15 +39,6 @@ chmod -R 755 /home/site/wwwroot
 echo "Waiting for file system operations to complete..."
 sleep 10
 
-# Start the application with Gunicorn
-echo "Starting the application on port 8181..."
-exec gunicorn --bind=0.0.0.0:8181 \
-    --workers=4 \
-    --timeout=120 \
-    --access-logfile=- \
-    --error-logfile=- \
-    --capture-output \
-    --enable-stdio-inheritance \
-    --preload \
-    --log-level=debug \
-    app:app 
+# Start the application with Gunicorn using config file
+echo "Starting the application using Gunicorn configuration..."
+exec gunicorn -c gunicorn.conf.py app:app 
