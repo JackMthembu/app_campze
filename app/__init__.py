@@ -28,10 +28,6 @@ def create_app(config_class=Config):
     # Configure Celery
     celery.conf.update(app.config)
 
-    # Register blueprints here
-    # from app.routes import main
-    # app.register_blueprint(main)
-
     return app
 
 # Create the application instance
