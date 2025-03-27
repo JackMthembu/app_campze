@@ -6,6 +6,9 @@ set -e
 # Print commands
 set -x
 
+# Wait for any management operations to complete
+sleep 10
+
 # Install MySQL client libraries and dependencies
 apt-get update
 apt-get install -y default-libmysqlclient-dev build-essential pkg-config python3-dev default-mysql-client
