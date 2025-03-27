@@ -14,9 +14,19 @@ from extensions import db, login_manager, mail, migrate, celery
 
 load_dotenv()
 
-def create_app():
+def create_app(config_class=Config):
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(config_class)
+    
+    # Debug logging for paths
+    app.logger.info(f"Current working directory: {os.getcwd()}")
+    app.logger.info(f"Template folder path: {app.template_folder}")
+    app.logger.info(f"Static folder path: {app.static_folder}")
+    app.logger.info(f"Template folder exists: {os.path.exists(app.template_folder)}")
+    app.logger.info(f"Static folder exists: {os.path.exists(app.static_folder)}")
+    app.logger.info(f"WEBSITE_HOSTNAME: {os.environ.get('WEBSITE_HOSTNAME')}")
+    app.logger.info(f"WEBSITE_SITE_NAME: {os.environ.get('WEBSITE_SITE_NAME')}")
+    app.logger.info(f"WEBSITE_INSTANCE_ID: {os.environ.get('WEBSITE_INSTANCE_ID')}")
     
     # Set application root path
     if os.environ.get('WEBSITE_HOSTNAME'):
@@ -220,6 +230,9 @@ def create_app():
     def favicon():
         return send_from_directory(os.path.join(app.root_path, 'static/img'),
                                 'favicon.png', mimetype='image/png')
+
+    # Debug logging for blueprints
+    app.logger.info(f"Registered blueprints: {list(app.blueprints.keys())}")
 
     return app
 

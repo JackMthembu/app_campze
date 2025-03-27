@@ -10,7 +10,7 @@ set -x
 export FLASK_APP=app
 export FLASK_ENV=production
 export PYTHONPATH=/home/site/wwwroot
-export PORT=8181
+export PORT=8000
 
 # Debug: Print environment variables
 echo "Current environment variables:"
@@ -43,4 +43,4 @@ sleep 10
 
 # Start the application with Gunicorn using config file
 echo "Starting the application using Gunicorn configuration..."
-exec gunicorn -c gunicorn.conf.py app:app 
+exec gunicorn -c gunicorn.conf.py "app:create_app()" 
