@@ -11,14 +11,12 @@ echo "Waiting for any pending operations to complete..."
 sleep 30
 
 # Set environment variables
-export PORT=8181
 export FLASK_APP=app
 export FLASK_ENV=production
 export PYTHONPATH=/home/site/wwwroot
 
 # Debug: Print environment variables
 echo "Current environment variables:"
-echo "PORT=$PORT"
 echo "FLASK_APP=$FLASK_APP"
 echo "FLASK_ENV=$FLASK_ENV"
 echo "PYTHONPATH=$PYTHONPATH"
@@ -46,8 +44,8 @@ echo "Waiting for file system operations to complete..."
 sleep 10
 
 # Start the application with Gunicorn
-echo "Starting the application on port $PORT..."
-exec gunicorn --bind=0.0.0.0:$PORT \
+echo "Starting the application on port 8181..."
+exec gunicorn --bind=0.0.0.0:8181 \
     --workers=4 \
     --timeout=120 \
     --access-logfile=- \
