@@ -18,6 +18,18 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
+    # Set application root path
+    if os.environ.get('WEBSITE_HOSTNAME'):
+        # Azure environment
+        app.root_path = '/home/site/wwwroot'
+        app.static_folder = '/home/site/wwwroot/static'
+        app.template_folder = '/home/site/wwwroot/templates'
+    else:
+        # Local environment
+        app.root_path = os.path.abspath(os.path.dirname(__file__))
+        app.static_folder = 'static'
+        app.template_folder = 'templates'
+    
     # Security configurations
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'ydjjKSDFDSJHhhdndvfasnjvdfNASAAOPOEFJCVBNdbsnsjKJSJFNDJJkkdjfnnfjdjkdkd')
     app.config['SESSION_REFRESH_EACH_REQUEST'] = True
