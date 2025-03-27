@@ -8,8 +8,9 @@ from datetime import timedelta, datetime
 import time
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from dotenv import load_dotenv
-from models import Currency
+from models import Currency, Country, State, User
 from tour_operator import tour_operator
+from app import db, login_manager, mail, migrate, celery
 
 load_dotenv()
 
@@ -46,8 +47,6 @@ def create_app():
         os.makedirs(app.config['UPLOAD_FOLDER_PROFILE'])
 
     # Initialize extensions
-    from extensions import mail, login_manager, db, migrate
-    
     db.init_app(app)
     mail.init_app(app)
     migrate.init_app(app, db)
@@ -109,7 +108,6 @@ def create_app():
             return None
 
     # Import routes and models after extensions are initialized
-    from models import Country, State, User
     from auth import auth_routes
     from routes import main, allowed_file
     from profiles import profile_routes
