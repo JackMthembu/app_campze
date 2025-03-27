@@ -35,11 +35,24 @@ def create_app():
         app.logger.info(f"Static folder: {app.static_folder}")
         app.logger.info(f"Template folder: {app.template_folder}")
         app.logger.info(f"Directory contents: {os.listdir(app.root_path)}")
+        app.logger.info(f"Port: {os.environ.get('PORT', '8181')}")
     else:
         # Local environment
         app.root_path = os.path.abspath(os.path.dirname(__file__))
         app.static_folder = 'static'
         app.template_folder = 'templates'
+    
+    # Initialize extensions
+    db.init_app(app)
+    mail.init_app(app)
+    migrate.init_app(app, db)
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth_routes.login'
+    
+    # Initialize Celery
+    celery.conf.update(app.config)
+    celery.conf.broker_url = app.config['CELERY_BROKER_URL']
+    celery.conf.result_backend = app.config['CELERY_RESULT_BACKEND']
     
     # Security configurations
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'ydjjKSDFDSJHhhdndvfasnjvdfNASAAOPOEFJCVBNdbsnsjKJSJFNDJJkkdjfnnfjdjkdkd')
@@ -75,13 +88,6 @@ def create_app():
     # Ensure upload directory exists
     if not os.path.exists(app.config['UPLOAD_FOLDER_PROFILE']):
         os.makedirs(app.config['UPLOAD_FOLDER_PROFILE'])
-
-    # Initialize extensions
-    db.init_app(app)
-    mail.init_app(app)
-    migrate.init_app(app, db)
-    login_manager.init_app(app)
-    login_manager.login_view = 'auth_routes.login'
 
     # Initialize CSRF protection
     csrf = CSRFProtect(app)

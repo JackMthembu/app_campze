@@ -19,6 +19,7 @@ fi
 export FLASK_APP=app
 export FLASK_ENV=production
 export PYTHONPATH=/home/site/wwwroot
+export PORT=8181
 
 # Print environment information
 echo "Python version:"
@@ -53,7 +54,7 @@ echo "Verifying files in wwwroot:"
 ls -la /home/site/wwwroot/
 
 # Start Gunicorn with production configuration
-gunicorn --bind=0.0.0.0:8000 \
+gunicorn --bind=0.0.0.0:$PORT \
          --workers=4 \
          --timeout=120 \
          --access-logfile=- \
@@ -63,4 +64,6 @@ gunicorn --bind=0.0.0.0:8000 \
          --enable-stdio-inheritance \
          --static-map /static=/home/site/wwwroot/static \
          --chdir /home/site/wwwroot \
+         --forwarded-allow-ips="*" \
+         --proxy-allow-ips="*" \
          app:app 
